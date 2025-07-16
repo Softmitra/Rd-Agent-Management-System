@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RD Agent System Documentation</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.min.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 1200px; margin: 0 auto; padding: 20px; }
+        h1, h2 { color: #2c3e50; }
+        .diagram { 
+            background: white; 
+            padding: 20px; 
+            border-radius: 8px; 
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1); 
+            margin-bottom: 30px;
+        }
+        .description { 
+            background: #f8f9fa; 
+            padding: 15px; 
+            border-left: 4px solid #3498db; 
+            margin: 20px 0; 
+        }
+    </style>
+</head>
+<body>
+    <h1>RD Agent Management System Documentation</h1>
+    
+    <div class="diagram">
+        <h2>Entity Relationship Diagram (ERD)</h2>
+        <div class="mermaid">
+erDiagram
+    CUSTOMER ||--o{ RD_ACCOUNT : "has"
+    AGENT ||--o{ CUSTOMER : "manages"
+    AGENT ||--o{ RD_ACCOUNT : "creates"
+    RD_ACCOUNT ||--o{ PAYMENT : "has"
+    USER ||--o| AGENT : "is"
+    USER ||--o| ROLE : "has"
+
+    CUSTOMER {
+        int id PK
+        string name
+        string email
+        string mobile_number
+        string aadhar_number
+        string pan_number
+        date date_of_birth
+        string cif_id
+        string savings_account_no
+        int agent_id FK
+    }
+    
+    RD_ACCOUNT {
+        int id PK
+        string account_number
+        decimal monthly_amount
+        decimal total_deposited
+        int duration_months
+        decimal maturity_amount
+        decimal interest_rate
+        date start_date
+        date maturity_date
+        string status
+        int customer_id FK
+        int agent_id FK
+    }
+    
+    AGENT {
+        int id PK
+        string name
+        string email
+        string mobile_number
+        date verification_date
+        string aadhar_file
+        string pan_file
+        string photo
+    }
+    
+    PAYMENT {
+        int id PK
+        decimal amount
+        date payment_date
+        string receipt_number
+        int rd_account_id FK
+        int agent_id FK
+    }
+    
+    USER {
+        int id PK
+        string name
+        string email
+        string password
+        timestamp email_verified_at
+        int agent_id FK
+    }
+    
+    ROLE {
+        int id PK
+        string name
+    }
+        </div>
+        <div class="description">
+            <p><strong>Entity Relationships:</strong> Shows the core entities and their relationships in the RD Agent system. Agents manage Customers who have RD Accounts. Payments are associated with RD Accounts.</p>
+        </div>
+    </div>
+
+    <div class="diagram">
+        <h2>Customer Onboarding Workflow</h2>
+        <div class="mermaid">
+flowchart TD
+    A[Agent Login] --> B[Create New Customer]
+    B --> C[Enter Customer Details:\n- Name, Contact Info\n- Aadhar/PAN Details\n- Date of Birth]
+    C --> D[Verify Documents]
+    D --> E{Document Verified?}
+    E -->|Yes| F[Create RD Account]
+    E -->|No| G[Request Document Resubmission]
+    F --> H[Enter RD Details:\n- Monthly Amount\n- Duration\n- Start Date]
+    H --> I[Generate Account Number]
+    I --> J[Activate RD Account]
+    J --> K[Confirm First Payment]
+        </div>
+        <div class="description">
+            <p><strong>Process:</strong> Illustrates the customer onboarding process starting from agent login through document verification to RD account activation.</p>
+        </div>
+    </div>
+
+    <div class="diagram">
+        <h2>RD Account Management Process</h2>
+        <div class="mermaid">
+flowchart LR
+    A[Agent Dashboard] --> B[Select Customer]
+    B --> C[View RD Accounts]
+    C --> D1[Add New RD Account]
+    C --> D2[Record Payment]
+    C --> D3[View Account Details]
+    D2 --> E[Enter Payment Details:\n- Amount\n- Date\n- Receipt Number]
+    E --> F[Update Account Balance]
+    F --> G[Generate Receipt]
+    D3 --> H[View:\n- Maturity Date\n- Balance\n- Payment History]
+        </div>
+        <div class="description">
+            <p><strong>Process:</strong> Shows how agents manage RD accounts including adding new accounts, recording payments, and viewing account details.</p>
+        </div>
+    </div>
+
+    <div class="diagram">
+        <h2>Admin Workflow</h2>
+        <div class="mermaid">
+flowchart TD
+    A[Admin Login] --> B[Manage Agents]
+    A --> C[Manage Customers]
+    A --> D[Manage RD Accounts]
+    A --> E[Manage Payments]
+    A --> F[Generate Reports]
+    
+    B --> B1[Create Agent]
+    B --> B2[Edit Agent]
+    B --> B3[View Agents]
+    
+    C --> C1[View Customers]
+    C --> C2[Edit Customer]
+    C --> C3[Create Customer]
+    
+    D --> D1[View RD Accounts]
+    D --> D2[Edit RD Account]
+    
+    E --> E1[View Payments]
+    E --> E2[Create Payment]
+    
+    F --> F1[Export Reports]
+        </div>
+        <div class="description">
+            <p><strong>Admin Workflow:</strong> Shows the core administrative tasks including agent management, customer oversight, and report generation.</p>
+        </div>
+    </div>
+
+    <div class="diagram">
+        <h2>Agent Workflow</h2>
+        <div class="mermaid">
+flowchart TD
+    A[Agent Login] --> B[Customer Management]
+    A --> C[RD Account Management]
+    A --> D[Payment Collection]
+    
+    B --> B1[Create Customer]
+    B --> B2[Edit Customer]
+    B --> B3[View Customers]
+    
+    C --> C1[Create RD Account]
+    C --> C2[Edit RD Account]
+    C --> C3[View RD Accounts]
+    
+    D --> D1[Record Payment]
+    D --> D2[View Payment History]
+    D --> D3[Generate Receipt]
+        </div>
+        <div class="description">
+            <p><strong>Agent Workflow:</strong> Illustrates the daily operational tasks for agents including customer interactions and payment processing.</p>
+        </div>
+    </div>
+
+    <script>
+        mermaid.initialize({ 
+            startOnLoad: true,
+            theme: 'default',
+            fontFamily: 'Arial',
+            securityLevel: 'loose'
+        });
+    </script>
+</body>
+</html>

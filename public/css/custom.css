@@ -1,0 +1,119 @@
+/* Custom AdminLTE Overrides */
+body:not(.sidebar-mini-md):not(.sidebar-mini-xs):not(.layout-top-nav) .content-wrapper, 
+body:not(.sidebar-mini-md):not(.sidebar-mini-xs):not(.layout-top-nav) .main-footer, 
+body:not(.sidebar-mini-md):not(.sidebar-mini-xs):not(.layout-top-nav) .main-header {
+    margin-left: 250px;
+}
+
+@media (max-width: 767.98px) {
+    body:not(.sidebar-mini-md):not(.sidebar-mini-xs):not(.layout-top-nav) .content-wrapper,
+    body:not(.sidebar-mini-md):not(.sidebar-mini-xs):not(.layout-top-nav) .main-footer,
+    body:not(.sidebar-mini-md):not(.sidebar-mini-xs):not(.layout-top-nav) .main-header {
+        margin-left: 0;
+    }
+}
+
+.main-sidebar {
+    width: 250px;
+}
+
+.nav-sidebar .nav-item > .nav-link {
+    margin-bottom: .2rem;
+}
+
+.nav-sidebar .nav-link p {
+    font-size: 14px;
+}
+
+.brand-link {
+    font-size: 1.25rem;
+    line-height: 1.5;
+    padding: 1rem;
+    width: 250px;
+    display: flex;
+    align-items: center;
+}
+
+.brand-link .brand-image {
+    margin-right: .5rem;
+    margin-top: -3px;
+}
+
+.sidebar-dark-primary {
+    background-color: #2c3e50;
+}
+
+.sidebar-dark-primary .nav-sidebar > .nav-item > .nav-link.active {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: #fff;
+}
+
+.main-header {
+    border-bottom: 1px solid #dee2e6;
+    z-index: 1034;
+}
+
+.navbar-light .navbar-nav .nav-link {
+    color: rgba(0, 0, 0, .7);
+}
+
+/* Fix for the toggle button */
+[class*='sidebar-dark'] .nav-sidebar > .nav-item.menu-open > .nav-link,
+[class*='sidebar-dark'] .nav-sidebar > .nav-item:hover > .nav-link {
+    background-color: rgba(255, 255, 255, .1);
+    color: #fff;
+}
+
+.nav-link[data-widget="pushmenu"] {
+    padding: .5rem 1rem;
+    margin-right: .5rem;
+}
+
+/* User menu styles */
+.user-menu .nav-link {
+    position: relative;
+    height: 100%;
+    display: flex;
+    align-items: center;
+}
+
+.user-menu .nav-link img {
+    width: 30px;
+    height: 30px;
+    margin-right: .5rem;
+}
+
+.user-header {
+    padding: 1rem;
+    text-align: center;
+    background-color: #3c8dbc !important;
+}
+
+.user-header i.fa-user-circle {
+    color: #fff;
+    margin-bottom: 1rem;
+}
+
+.user-header p {
+    color: #fff;
+    margin-bottom: 0;
+}
+
+.user-footer {
+    padding: 0.5rem 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #f8f9fa;
+}
+
+/* Dashboard card styles */
+.small-box {
+    border-radius: .5rem;
+    box-shadow: 0 0 1px rgba(0,0,0,.125), 0 1px 3px rgba(0,0,0,.2);
+}
+
+/* Font styles */
+body {
+    font-family: 'Poppins', sans-serif;
+} 
