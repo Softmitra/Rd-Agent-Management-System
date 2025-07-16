@@ -2,11 +2,12 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\RDAccount;
 use App\Models\Payment;
+use App\Models\RDAccount;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Carbon\Carbon;
+use Illuminate\Support\Facades\Log;
 
 class CollectionController extends Controller
 {
@@ -17,16 +18,15 @@ class CollectionController extends Controller
             ->with(['rdAccount', 'rdAccount.customer'])
             ->latest();
 
-        // Apply filters
         if ($request->filled('account_number')) {
             $query->whereHas('rdAccount', function($q) use ($request) {
-                $q->where('account_number', 'like', '%' . $request->account_number . '%');
+                $q->where('account_number', 'like', '%'.$request->account_number.'%');
             });
         }
 
         if ($request->filled('customer_name')) {
             $query->whereHas('rdAccount.customer', function($q) use ($request) {
-                $q->where('name', 'like', '%' . $request->customer_name . '%');
+                $q->where('name', 'like', '%'.$request->customer_name.'%');
             });
         }
 
@@ -53,7 +53,7 @@ class CollectionController extends Controller
                 ->where('status', 'active')
                 ->with('customer');
 
-            $query->whereHas('customer', function ($q) use ($search) {
+            $query->whereHas('customer', function($q) use ($search) {
                 $q->where('name', 'like', "%$search%")
                   ->orWhere('mobile_number', 'like', "%$search%")
                   ->orWhere('cif_id', 'like', "%$search%");
@@ -83,10 +83,8 @@ class CollectionController extends Controller
             $rdAccount = RDAccount::findOrFail($request->rd_account_id);
             $monthsPaid = $request->pending_months;
 
-            // Generate receipt number
-            $receiptNumber = 'COLL' . date('Ymd') . str_pad(Payment::count() + 1, 6, '0', STR_PAD_LEFT);
- 
-            // Create payment record
+            $receiptNumber = 'COLL'.date('Ymd').str_pad(Payment::count()+1, 6, '0', STR_PAD_LEFT);
+
             $payment = Payment::create([
                 'rd_account_id' => $rdAccount->id,
                 'customer_id' => $rdAccount->customer_id,
@@ -105,7 +103,6 @@ class CollectionController extends Controller
                 'updated_by' => auth()->id(),
             ]);
 
-            // Update RD account
             $rdAccount->update([
                 'total_deposited' => $rdAccount->total_deposited + $request->amount,
                 'installments_paid' => $rdAccount->installments_paid + $monthsPaid,
@@ -122,32 +119,38 @@ class CollectionController extends Controller
         }
     }
 
-    /**
-     * Display the specified collection/payment details
-     */
-    /**
-     * Display RD account details for collection
-     */
-    public function show(RDAccount $account)
+    public function show($id)
     {
-        // Eager load customer relationship with null check
-        $account->load(['customer' => function($query) {
-            $query->withDefault([
-                'name' => 'N/A',
-                'mobile_number' => 'N/A',
-                'cif_id' => 'N/A'
-            ]);
-        }]);
+        try {
+            $account = RDAccount::with(['customer' => function($query) {
+                $query->withDefault([
+                    'name' => 'N/A',
+                    'mobile_number' => 'N/A',
+                    'cif_id' => 'N/A'
+                ]);
+            }])->findOrFail($id);
 
-        $payments = Payment::where('rd_account_id', $account->id)
-            ->latest()
-            ->limit(5)
-            ->get();
+            Log::info('Showing RDAccount', ['account_id' => $account->id]);
+
+            $payments = Payment::where('rd_account_id', $account->id)
+                ->latest()
+                ->limit(5)
+                ->get();
+
+            return view('agent.collections.show', [
+                'account' => $account,
+                'payments' => $payments,
+                'customer' => $account->customer
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Failed to show RD account', [
+                'error' => $e->getMessage(),
+                'account_id' => $id ?? null
+            ]);
             
-        return view('agent.collections.show', [
-            'account' => $account,
-            'payments' => $payments,
-            'customer' => $account->customer
-        ]);
+            return redirect()->route('collections.create')
+                ->with('error', 'Invalid RD Account. Please try again.');
+        }
     }
 }
