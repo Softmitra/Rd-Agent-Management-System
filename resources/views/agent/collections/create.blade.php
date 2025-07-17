@@ -71,10 +71,9 @@
                                     <th>Customer Name</th>
                                     <th>Account Number</th>
                                     <th>CIF ID</th>
-                                    <th>Mobile</th>
                                     <th>Denomination</th>
-                                    <th>Premiums Paid</th>
-                                    <th>Premiums Pending</th>
+                                    <th>Prem Paid</th>
+                                    <th>Prem Pending</th>
                                     <th>Status</th>
                                     <th>Action</th>
                                 </tr>
@@ -92,7 +91,6 @@
                                         <td><strong>{{ $account->customer->name }}</strong></td>
                                         <td>{{ $account->account_number }}</td>
                                         <td>{{ $account->customer->cif_id ?? 'N/A' }}</td>
-                                        <td>{{ $account->customer->mobile_number ?? 'N/A' }}</td>
                                         <td>₹{{ number_format($account->monthly_amount, 2) }}</td>
                                         <td>
                                             <span class="badge bg-success">{{ $account->installments_paid }}</span>
@@ -123,7 +121,10 @@
                                 @endforeach
                             <tfoot>
                                 <tr class="table-active">
-                                    <td colspan="4" class="text-end"><strong>Total:</strong></td>
+                                    <td colspan="1" class="text-end"><strong>Total:</strong></td>
+                                    <td colspan="2" class="text-end">
+                                        <strong>Row : <strong>{{ $rdAccounts->count() }}</strong></strong>
+                                    </td>
                                     <td><strong>₹{{ number_format($rdAccounts->sum('monthly_amount'), 2) }}</strong></td>
                                     <td><strong>{{ $rdAccounts->sum('installments_paid') }}</strong></td>
                                     <td><strong>{{ $rdAccounts->sum(function ($account) {
@@ -139,10 +140,7 @@
                             </tfoot>
                             </tbody>
                         </table>
-                        <div class="m-2 text-center">
-                            <span class="text-end"><strong>Total Row:</strong></span>
-                            <span><strong>{{ $rdAccounts->count() }}</strong></span>
-                        </div>
+                        <button type="button" class="btn btn-primary">Collect Amount</button>
                     </div>
                 </div>
             </div>
