@@ -105,8 +105,13 @@ class RDAccountController extends Controller
 
             $validated['start_date'] = $openingDate->format('Y-m-d');
 
-            // Calculate installments paid based on total deposited amount
-            $validated['installments_paid'] = (int) floor($validated['total_deposited'] / $validated['monthly_amount']);
+            // Set installments_paid to 1 if account opened in current month
+            if ($openingDate->isCurrentMonth()) {
+                $validated['installments_paid'] = 1;
+            } else {
+                // Otherwise calculate based on total deposited amount
+                $validated['installments_paid'] = (int) floor($validated['total_deposited'] / $validated['monthly_amount']);
+            }
 
             // Get customer's agent_id
             $customer = Customer::findOrFail($validated['customer_id']);

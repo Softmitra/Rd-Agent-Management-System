@@ -5,11 +5,19 @@
 @section('content')
     <div class="container-fluid px-4">
         <h5 class="mt-1">Collection Entry</h5>
-        <ol class="breadcrumb mb-3">
-            <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Dashboard</a></li>
-            <li class="breadcrumb-item"><a href="{{ route('collections.index') }}">Collections</a></li>
-            <li class="breadcrumb-item active">Collection Entry</li>
-        </ol>
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Dashboard</a></li>
+                <li class="breadcrumb-item"><a href="{{ route('collections.index') }}">Collections</a></li>
+                <li class="breadcrumb-item active">Collection Entry</li>
+            </ol>
+
+            <a href="{{ route('collections.index') }}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Back to Collections List
+            </a>
+
+        </div>
+
 
         @if (session('success'))
             <div class="alert alert-success">
@@ -59,10 +67,16 @@
         @if (request('search') && isset($rdAccounts) && $rdAccounts->count() > 0)
             <!-- Search Results Table -->
             <div class="card mb-4">
-                <div class="card-header">
-                    <i class="fas fa-list me-1"></i>
-                    RD Accounts - Search Results for "{{ request('search') }}"
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <div>
+                        <i class="fas fa-list me-1"></i>
+                        RD Accounts - Search Results for "{{ request('search') }}"
+                    </div>
+                    <a href="{{ route('collections.export') }}" class="btn btn-success">
+                        <i class="fas fa-file-excel"></i> Export to Excel
+                    </a>
                 </div>
+
                 <div class="card-body">
                     <div class="table-responsive">
                         <table class="table table-striped table-hover">
@@ -77,7 +91,7 @@
                                     <th>Status</th>
                                     <th>Action</th>
                                 </tr>
-                            </thead>    
+                            </thead>
                             <tbody>
                                 @foreach ($rdAccounts as $account)
                                     @php
@@ -140,8 +154,10 @@
                             </tfoot>
                             </tbody>
                         </table>
-                        <button type="button" class="btn btn-primary" data-toggle="modal"
+
+                        <button type="button" class="btn btn-primary mr-2" data-toggle="modal"
                             data-target="#collectionModal">Collect Amount</button>
+
 
                         <!-- Collection Modal -->
                         <div class="modal fade" id="collectionModal" tabindex="-1" aria-labelledby="collectionModalLabel"
@@ -174,8 +190,8 @@
 
                                                 <div class="mb-3 col-12">
                                                     <label for="amount" class="form-label">Amount</label>
-                                                    <input type="number" class="form-control" id="amount" name="amount"
-                                                        step="0.01" required>
+                                                    <input type="number" class="form-control" id="amount"
+                                                        name="amount" step="0.01" required>
                                                 </div>
                                                 <div class="mb-3 col-12">
                                                     <label for="note" class="form-label">Note</label>
