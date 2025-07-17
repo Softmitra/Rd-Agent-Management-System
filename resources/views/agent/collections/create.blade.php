@@ -72,12 +72,12 @@
                                     <th>Account Number</th>
                                     <th>CIF ID</th>
                                     <th>Denomination</th>
-                                    <th>Prem Paid</th>
-                                    <th>Prem Pending</th>
+                                    <th>Prem. Paid</th>
+                                    <th>Prem. Pending</th>
                                     <th>Status</th>
                                     <th>Action</th>
                                 </tr>
-                            </thead>
+                            </thead>    
                             <tbody>
                                 @foreach ($rdAccounts as $account)
                                     @php
@@ -140,7 +140,58 @@
                             </tfoot>
                             </tbody>
                         </table>
-                        <button type="button" class="btn btn-primary">Collect Amount</button>
+                        <button type="button" class="btn btn-primary" data-toggle="modal"
+                            data-target="#collectionModal">Collect Amount</button>
+
+                        <!-- Collection Modal -->
+                        <div class="modal fade" id="collectionModal" tabindex="-1" aria-labelledby="collectionModalLabel"
+                            aria-hidden="true">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title" id="collectionModalLabel">Enter Collection Details</h5>
+                                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                            <span aria-hidden="true">&times;</span>
+                                        </button>
+                                    </div>
+                                    <form action="{{ route('collections.store') }}" method="POST">
+                                        @csrf
+                                        <div class="modal-body">
+                                            <div class="row">
+                                                <div class="mb-3 col-12">
+                                                    <label for="collectionDate" class="form-label">Date</label>
+                                                    <input type="date" class="form-control" id="collectionDate"
+                                                        name="date" value="{{ date('Y-m-d') }}" required>
+                                                </div>
+                                                <div class="mb-3 col-12">
+                                                    <label for="paymentType" class="form-label d-block">Payment Type</label>
+                                                    <select class="form-control w-100 select2" id="paymentType"
+                                                        name="payment_type" required>
+                                                        <option value="cash">Cash</option>
+                                                        <option value="upi">UPI</option>
+                                                    </select>
+                                                </div>
+
+                                                <div class="mb-3 col-12">
+                                                    <label for="amount" class="form-label">Amount</label>
+                                                    <input type="number" class="form-control" id="amount" name="amount"
+                                                        step="0.01" required>
+                                                </div>
+                                                <div class="mb-3 col-12">
+                                                    <label for="note" class="form-label">Note</label>
+                                                    <textarea class="form-control" id="note" name="note" rows="3"></textarea>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary"
+                                                data-dismiss="modal">Cancel</button>
+                                            <button type="submit" class="btn btn-primary">Submit Collection</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -151,7 +202,8 @@
                 <div class="card-body text-center">
                     <i class="fas fa-search fa-3x text-muted mb-3"></i>
                     <h5>No RD Accounts Found</h5>
-                    <p class="text-muted">No active RD accounts found for "{{ request('search') }}". Please try a different
+                    <p class="text-muted">No active RD accounts found for "{{ request('search') }}". Please try a
+                        different
                         search term.</p>
                 </div>
             </div>
@@ -161,231 +213,33 @@
                 <div class="card-body text-center">
                     <i class="fas fa-search fa-3x text-muted mb-3"></i>
                     <h5>Search for Customer</h5>
-                    <p class="text-muted">Enter customer name, mobile number, or CIF ID to view their active RD accounts and
+                    <p class="text-muted">Enter customer name, mobile number, or CIF ID to view their active RD accounts
+                        and
                         enter collections.</p>
                 </div>
             </div>
         @endif
     </div>
 
-    <!-- Collection Entry Modal -->
-    <div class="modal fade" id="collectionModal" tabindex="-1" aria-labelledby="collectionModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="collectionModalLabel">Enter Collection</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <form action="{{ route('collections.store') }}" method="POST">
-                    @csrf
-                    <div class="modal-body">
-                        <input type="hidden" id="modal_rd_account_id" name="rd_account_id">
-
-                        <!-- Account Information -->
-                        <div class="card mb-3">
-                            <div class="card-header">
-                                <h6 class="mb-0">Account Information</h6>
-                            </div>
-                            <div class="card-body">
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <p><strong>Customer Name:</strong> <span id="modal_customer_name"></span></p>
-                                        <p><strong>Account Number:</strong> <span id="modal_account_number"></span></p>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <p><strong>Monthly Amount:</strong> ₹<span id="modal_monthly_amount"></span></p>
-                                        <p><strong>Pending Months:</strong> <span id="modal_pending_months"></span></p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="row">
-                            <div class="col-md-4">
-                                <div class="mb-3">
-                                    <label for="payment_date" class="form-label">Payment Date</label>
-                                    <input type="date" class="form-control" id="payment_date" name="payment_date"
-                                        value="{{ date('Y-m-d') }}" required>
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="mb-3">
-                                    <label for="payment_mode" class="form-label">Payment Type</label>
-                                    <select class="form-select" id="payment_mode" name="payment_mode" required>
-                                        <option value="">Select Payment Type</option>
-                                        <option value="cash">Cash</option>
-                                        <option value="upi">UPI</option>
-                                        <option value="cheque">Cheque</option>
-                                        <option value="online">Online</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="mb-3">
-                                    <label for="note" class="form-label">Note</label>
-                                    <input type="text" class="form-control" id="note" name="note">
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="amount" class="form-label">Amount</label>
-                            <input type="number" class="form-control" id="amount" name="amount" step="0.01"
-                                required readonly>
-                        </div>
-
-                        <!-- Payment Mode Specific Fields -->
-                        <div class="row" id="cheque_details" style="display: none;">
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label for="cheque_number" class="form-label">Cheque Number</label>
-                                    <input type="text" class="form-control" id="cheque_number" name="cheque_number">
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label for="bank_name" class="form-label">Bank Name</label>
-                                    <input type="text" class="form-control" id="bank_name" name="bank_name">
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="row" id="online_details" style="display: none;">
-                            <div class="col-md-12">
-                                <div class="mb-3">
-                                    <label for="transaction_id" class="form-label">Transaction ID</label>
-                                    <input type="text" class="form-control" id="transaction_id"
-                                        name="transaction_id">
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="row" id="upi_details" style="display: none;">
-                            <div class="col-md-12">
-                                <div class="mb-3">
-                                    <label for="upi_id" class="form-label">UPI ID</label>
-                                    <input type="text" class="form-control" id="upi_id" name="upi_id">
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Amount Breakdown -->
-                        <div class="card" id="amount_breakdown" style="display: none;">
-                            <div class="card-header">
-                                <h6 class="mb-0">Amount Breakdown</h6>
-                            </div>
-                            <div class="card-body">
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <p><strong>Base Amount:</strong> ₹<span id="base_amount">0.00</span></p>
-                                        <p><strong>Penalty:</strong> ₹<span id="penalty_amount">0.00</span></p>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <p><strong>Rebate:</strong> ₹<span id="rebate_amount">0.00</span></p>
-                                        <p><strong>Total Amount:</strong> ₹<span id="total_amount">0.00</span></p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-primary">Submit Collection</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
 @endsection
 
 @push('scripts')
     <script>
-        let currentMonthlyAmount = 0;
-        let currentPendingMonths = 0;
+        $(document).ready(function() {
+            // Set default date
+            $('#collectionDate').val(new Date().toISOString().substr(0, 10));
 
-        function openCollectionModal(rdAccountId, customerName, accountNumber, monthlyAmount, pendingMonths) {
-            currentMonthlyAmount = monthlyAmount;
-            currentPendingMonths = pendingMonths;
+            // Initialize modal with jQuery
+            $('#collectionModal').modal({
+                show: false,
+                backdrop: 'static'
+            });
 
-            // Populate modal with account details
-            document.getElementById('modal_rd_account_id').value = rdAccountId;
-            document.getElementById('modal_customer_name').textContent = customerName;
-            document.getElementById('modal_account_number').textContent = accountNumber;
-            document.getElementById('modal_monthly_amount').textContent = monthlyAmount.toFixed(2);
-            document.getElementById('modal_pending_months').textContent = pendingMonths;
-
-            // Populate months dropdown
-            const monthsSelect = document.getElementById('pending_months');
-            monthsSelect.innerHTML = '<option value="">Select Months</option>';
-
-            for (let i = 1; i <= Math.min(12, pendingMonths); i++) {
-                const option = document.createElement('option');
-                option.value = i;
-                option.textContent = `${i} Month${i > 1 ? 's' : ''}`;
-                monthsSelect.appendChild(option);
-            }
-
-            // Show modal
-            const modal = new bootstrap.Modal(document.getElementById('collectionModal'));
-            modal.show();
-        }
-
-        document.getElementById('pending_months').addEventListener('change', function() {
-            const selectedMonths = parseInt(this.value);
-            const amountBreakdown = document.getElementById('amount_breakdown');
-
-            if (selectedMonths > 0) {
-                amountBreakdown.style.display = 'block';
-
-                // Calculate base amount
-                const baseAmount = currentMonthlyAmount * selectedMonths;
-                document.getElementById('base_amount').textContent = baseAmount.toFixed(2);
-
-                // Calculate penalty (simplified - ₹5 per month for overdue)
-                let penalty = 0;
-                if (currentPendingMonths > 0) {
-                    const monthsForPenalty = Math.min(currentPendingMonths, selectedMonths);
-                    for (let i = 1; i <= monthsForPenalty; i++) {
-                        penalty += (i * 5);
-                    }
-                }
-                document.getElementById('penalty_amount').textContent = penalty.toFixed(2);
-
-                // Calculate rebate
-                let rebate = 0;
-                if (selectedMonths === 6) {
-                    rebate = (currentMonthlyAmount / 100) * 10;
-                } else if (selectedMonths === 12) {
-                    rebate = (currentMonthlyAmount / 100) * 40;
-                }
-                document.getElementById('rebate_amount').textContent = rebate.toFixed(2);
-
-                // Calculate total
-                const totalAmount = baseAmount + penalty - rebate;
-                document.getElementById('total_amount').textContent = totalAmount.toFixed(2);
-                document.getElementById('amount').value = totalAmount.toFixed(2);
-            } else {
-                amountBreakdown.style.display = 'none';
-                document.getElementById('amount').value = '';
-            }
-        });
-
-        document.getElementById('payment_mode').addEventListener('change', function() {
-            const chequeDetails = document.getElementById('cheque_details');
-            const onlineDetails = document.getElementById('online_details');
-            const upiDetails = document.getElementById('upi_details');
-
-            chequeDetails.style.display = 'none';
-            onlineDetails.style.display = 'none';
-            upiDetails.style.display = 'none';
-
-            if (this.value === 'cheque') {
-                chequeDetails.style.display = 'flex';
-            } else if (this.value === 'online') {
-                onlineDetails.style.display = 'flex';
-            } else if (this.value === 'upi') {
-                upiDetails.style.display = 'flex';
-            }
+            // Debug modal show
+            $('[data-bs-target="#collectionModal"]').click(function() {
+                console.log('Button clicked, showing modal');
+                $('#collectionModal').modal('show');
+            });
         });
     </script>
 @endpush

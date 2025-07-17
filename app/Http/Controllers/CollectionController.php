@@ -69,52 +69,40 @@ class CollectionController extends Controller
     {
         try {
             $request->validate([
-                'rd_account_id' => 'required|exists:rd_accounts,id',
-                'pending_months' => 'required|integer|min:1|max:12',
+                'date' => 'required|date',
+                'payment_type' => 'required|in:cash,upi',
                 'amount' => 'required|numeric|min:0',
-                'payment_date' => 'required|date',
-                'payment_mode' => 'required|in:cash,cheque,online,upi',
-                'cheque_number' => 'required_if:payment_mode,cheque|nullable',
-                'bank_name' => 'required_if:payment_mode,cheque|nullable',
-                'transaction_id' => 'required_if:payment_mode,online|nullable',
-                'upi_id' => 'required_if:payment_mode,upi|nullable',
+                'note' => 'nullable|string',
             ]);
 
-            $rdAccount = RDAccount::findOrFail($request->rd_account_id);
-            $monthsPaid = $request->pending_months;
+            // Get the selected RD account from search results
+            $rdAccount = RDAccount::where('agent_id', auth()->id())
+                ->where('status', 'active')
+                ->first();
 
-            $receiptNumber = 'COLL'.date('Ymd').str_pad(Payment::count()+1, 6, '0', STR_PAD_LEFT);
+            if (!$rdAccount) {
+                return redirect()->back()
+                    ->with('error', 'No active RD account found for collection')
+                    ->withInput();
+            }
 
-            $payment = Payment::create([
-                'rd_account_id' => $rdAccount->id,
-                'customer_id' => $rdAccount->customer_id,
-                'agent_id' => auth()->id(),
-                'receipt_number' => $receiptNumber,
+            // Create collection record
+            $collection = \App\Models\Collection::create([
+                'date' => $request->date,
+                'payment_type' => $request->payment_type,
                 'amount' => $request->amount,
-                'payment_date' => Carbon::parse($request->payment_date),
-                'payment_method' => $request->payment_mode,
-                'cheque_number' => $request->cheque_number,
-                'bank_name' => $request->bank_name,
-                'transaction_id' => $request->transaction_id,
-                'upi_id' => $request->upi_id,
-                'status' => 'Not in Lot',
-                'remarks' => "Collection for {$monthsPaid} month(s)",
-                'created_by' => auth()->id(),
-                'updated_by' => auth()->id(),
-            ]);
-
-            $rdAccount->update([
-                'total_deposited' => $rdAccount->total_deposited + $request->amount,
-                'installments_paid' => $rdAccount->installments_paid + $monthsPaid,
-                'updated_by' => auth()->id(),
+                'note' => $request->note,
+                'agent_id' => auth()->id(),
+                'customer_id' => $rdAccount->customer_id,
+                'status' => 'submitted'
             ]);
 
             return redirect()->route('collections.index')
-                ->with('success', "Collection recorded successfully! Receipt Number: {$receiptNumber}");
+                ->with('success', 'Collection recorded successfully!');
 
         } catch (\Exception $e) {
             return redirect()->back()
-                ->with('error', 'Failed to record collection. Please try again.')
+                ->with('error', 'Failed to record collection: ' . $e->getMessage())
                 ->withInput();
         }
     }
