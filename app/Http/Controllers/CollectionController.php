@@ -17,8 +17,8 @@ class CollectionController extends Controller
     public function index(Request $request)
     {
         $agent = Auth::user();
-        $query = Payment::where('agent_id', $agent->id)
-            ->with(['rdAccount', 'rdAccount.customer'])
+        $query = Collection::where('agent_id', $agent->id)
+            ->with(['rdAccount', 'customer'])
             ->latest();
 
         if ($request->filled('account_number')) {
@@ -28,13 +28,13 @@ class CollectionController extends Controller
         }
 
         if ($request->filled('customer_name')) {
-            $query->whereHas('rdAccount.customer', function ($q) use ($request) {
+            $query->whereHas('customer', function ($q) use ($request) {
                 $q->where('name', 'like', '%' . $request->customer_name . '%');
             });
         }
 
-        if ($request->filled('payment_date')) {
-            $query->whereDate('payment_date', $request->payment_date);
+        if ($request->filled('date')) {
+            $query->whereDate('date', $request->date);
         }
 
         if ($request->filled('status')) {

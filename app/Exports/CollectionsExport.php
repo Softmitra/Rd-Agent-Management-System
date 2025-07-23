@@ -46,11 +46,11 @@ class CollectionsExport implements FromCollection, WithHeadings, WithMapping, Sh
             $collection->customer->name ?? 'N/A',
             $collection->rdAccount->account_number ?? 'N/A',
             '₹' . number_format($collection->amount, 2),
-            $collection->payment_date->format('d/m/Y'),
+            $collection->payment_date ? $collection->payment_date->format('d/m/Y') : 'N/A',
             ucfirst($collection->payment_method),
             ucfirst($collection->status),
             $collection->remarks ?? '-',
-            $collection->created_at->format('d/m/Y H:i:s')
+            $collection->created_at ? $collection->created_at->format('d/m/Y H:i:s') : 'N/A'
         ];
     }
 
