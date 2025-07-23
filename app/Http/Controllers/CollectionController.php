@@ -184,8 +184,11 @@ class CollectionController extends Controller
             'user_id' => $userId,
             'records_exported' => $collections->count()
         ]);
+        $fileName = 'collection_' . date('Y-m-d_H-i-s') . '.xlsx';
 
-        return Excel::download(new CollectionsExport($collections),
-            'collections_' . date('Y-m-d_H-i-s') . '.xlsx');
+        // return Excel::download(new CollectionsExport($collections),
+        //     'collections_' . date('Y-m-d_H-i-s') . '.xlsx');
+
+        return Excel::download(new CollectionsExport($collections), $fileName);
     }
 }

@@ -98,7 +98,6 @@ Route::prefix('agent')->middleware(['auth', 'agent.access'])->group(function () 
     Route::post('rd-agent-accounts/{rdAccount}/mature', [RDAgentAccount::class, 'mature'])->name('rd-agent-accounts.mature');
     Route::resource('payments', PaymentController::class);
     Route::resource('collections', CollectionController::class);
-Route::get('collections/export', [CollectionController::class, 'export'])->name('collections.export');
 });
 
 // Common Routes (accessible to both agents and admins)
@@ -114,6 +113,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/notifications/{id}/mark-as-read', [NotificationController::class, 'markAsRead'])->name('notifications.markAsRead');
     Route::post('/notifications/mark-all-as-read', [NotificationController::class, 'markAllAsRead'])->name('notifications.markAllAsRead');
     Route::get('/notifications/unread-count', [NotificationController::class, 'getUnreadCount'])->name('notifications.unreadCount');
+    Route::get('collections/export', [CollectionController::class, 'export'])->name('admin.collections.export');
 
     Route::get('rd-accounts/export', [RDAccountController::class, 'export'])->name('admin.rd-accounts.export');
     Route::get('rd-accounts/get-agent/{customerId}', [RDAccountController::class, 'getAgentByCustomer'])->name('admin.rd-accounts.get-agent');

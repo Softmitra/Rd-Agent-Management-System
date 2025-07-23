@@ -11,12 +11,20 @@ class Collection extends Model
 
     protected $fillable = [
         'date',
-        'payment_type',
+        'payment_date',
+        'payment_type', 
         'amount',
         'note',
         'agent_id',
         'customer_id',
         'status'
+    ];
+
+    protected $dates = [
+        'date',
+        'payment_date',
+        'created_at',
+        'updated_at'
     ];
 
     public function agent()
@@ -27,5 +35,10 @@ class Collection extends Model
     public function customer()
     {
         return $this->belongsTo(\App\Models\Customer::class);
+    }
+
+    public function rdAccount()
+    {
+        return $this->belongsTo(\App\Models\RDAccount::class, 'customer_id', 'customer_id');
     }
 }

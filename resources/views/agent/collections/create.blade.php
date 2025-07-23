@@ -72,7 +72,7 @@
                         <i class="fas fa-list me-1"></i>
                         RD Accounts - Search Results for "{{ request('search') }}"
                     </div>
-                    <a href="{{ route('collections.export') }}" class="btn btn-success">
+                    <a href="{{ route('admin.collections.export') }}" class="btn btn-success">
                         <i class="fas fa-file-excel"></i> Export to Excel
                     </a>
                 </div>
