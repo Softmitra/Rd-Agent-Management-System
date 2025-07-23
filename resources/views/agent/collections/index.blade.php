@@ -35,9 +35,14 @@
         <!-- Action Buttons -->
         <div class="d-flex justify-content-between align-items-center mb-3">
             <h6 class="mb-0">Collection Records</h6>
-            <a href="{{ route('collections.create') }}" class="btn btn-primary">
-                <i class="fas fa-plus"></i> Add Collection Entry
-            </a>
+            <div>
+                <a href="{{ route('admin.collectionslist.export') }}" class="btn btn-success me-2">
+                    <i class="fas fa-file-excel"></i> Export to Excel
+                </a>
+                <a href="{{ route('collections.create') }}" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> Add Collection Entry
+                </a>
+            </div>
         </div>
 
         <!-- Filters -->

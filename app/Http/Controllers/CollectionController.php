@@ -191,4 +191,57 @@ class CollectionController extends Controller
 
         return Excel::download(new CollectionsExport($collections), $fileName);
     }
+    
+    public function exportList(Request $request)
+    {
+        $userId = auth()->id();
+        $logData = [
+            'user_id' => $userId,
+            'search' => $request->search,
+            'start_date' => $request->start_date,
+            'end_date' => $request->end_date,
+            'timestamp' => now()->toDateTimeString(),
+        ];
+
+        Log::info('Collection export started.', $logData);
+
+        $query = Collection::with(['customer', 'rdAccount'])
+            ->where('agent_id', $userId);
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q
+                    ->whereHas('customer', function ($q) use ($search) {
+                        $q
+                            ->where('name', 'like', "%$search%")
+                            ->orWhere('mobile_number', 'like', "%$search%");
+                    })
+                    ->orWhereHas('rdAccount', function ($q) use ($search) {
+                        $q->where('account_number', 'like', "%$search%");
+                    });
+            });
+        }
+
+        if ($request->filled('start_date')) {
+            $query->whereDate('date', '>=', $request->start_date);
+        }
+
+        if ($request->filled('end_date')) {
+            $query->whereDate('date', '<=', $request->end_date);
+        }
+
+        $collections = $query->latest()->get();
+
+        Log::info('Collection export completed.', [
+            'user_id' => $userId,
+            'records_exported' => $collections->count()
+        ]);
+        $fileName = 'collection_' . date('Y-m-d_H-i-s') . '.xlsx';
+
+        // return Excel::download(new CollectionsExport($collections),
+        //     'collections_' . date('Y-m-d_H-i-s') . '.xlsx');
+
+        return Excel::download(new CollectionsExport($collections), $fileName);
+    }
 }

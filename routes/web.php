@@ -114,6 +114,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/notifications/mark-all-as-read', [NotificationController::class, 'markAllAsRead'])->name('notifications.markAllAsRead');
     Route::get('/notifications/unread-count', [NotificationController::class, 'getUnreadCount'])->name('notifications.unreadCount');
     Route::get('collections/export', [CollectionController::class, 'export'])->name('admin.collections.export');
+    Route::get('collectionslist/export', [CollectionController::class, 'exportList'])->name('admin.collectionslist.export');
 
     Route::get('rd-accounts/export', [RDAccountController::class, 'export'])->name('admin.rd-accounts.export');
     Route::get('rd-accounts/get-agent/{customerId}', [RDAccountController::class, 'getAgentByCustomer'])->name('admin.rd-accounts.get-agent');
