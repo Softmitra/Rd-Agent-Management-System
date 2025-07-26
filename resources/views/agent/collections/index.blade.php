@@ -65,8 +65,8 @@
                     </div>
                     <div class="col-md-2">
                         <label for="date" class="form-label">Payment Date</label>
-                        <input type="date" name="payment_date" class="form-control"
-                            value="{{ request('payment_date') }}">
+                        <input type="date" name="date" class="form-control"
+                            value="{{ request('date') }}">
                     </div>
                     <div class="col-md-2">
                         <label for="status" class="form-label">Status</label>
