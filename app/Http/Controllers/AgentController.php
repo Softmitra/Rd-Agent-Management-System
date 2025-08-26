@@ -335,4 +335,30 @@ class AgentController extends Controller
     {
         return view('admin.agents.edit', compact('agent'));
     }
+
+    /**
+     * View agent document.
+     */
+    public function viewDocument(Agent $agent, $type)
+    {
+        // Validate document type
+        if (!in_array($type, ['aadhar', 'pan'])) {
+            abort(404);
+        }
+
+        $field = $type . '_file';
+        $filePath = $agent->$field;
+
+        if (!$filePath || !Storage::disk('public')->exists($filePath)) {
+            abort(404);
+        }
+
+        $fullPath = Storage::disk('public')->path($filePath);
+        $mimeType = mime_content_type($fullPath);
+
+        return response()->file($fullPath, [
+            'Content-Type' => $mimeType,
+            'Content-Disposition' => 'inline; filename="' . basename($filePath) . '"'
+        ]);
+    }
 }

@@ -18,12 +18,21 @@
                     </a>
                 </li>
                 
+                @if(Auth::user()->hasRole('admin'))
                 <li class="nav-item">
                     <a href="{{ route('customers.index') }}" class="nav-link {{ request()->routeIs('customers.*') ? 'active' : '' }}">
                         <i class="nav-icon fas fa-users"></i>
-                        <p>Customers</p>
+                        <p>All Customers</p>
                     </a>
                 </li>
+                @else
+                <li class="nav-item">
+                    <a href="{{ route('agent.customers.index') }}" class="nav-link {{ request()->routeIs('agent.customers.*') ? 'active' : '' }}">
+                        <i class="nav-icon fas fa-users"></i>
+                        <p>My Customers</p>
+                    </a>
+                </li>
+                @endif
                 
                 @if(auth()->user()->id == 1)
                 <li class="nav-item">
@@ -54,6 +63,42 @@
                         <p>Collection Entry</p>
                     </a>
                 </li>
+                
+                <!-- Lot Management -->
+                @if(auth()->user()->id == 1)
+                <li class="nav-item">
+                    <a href="{{ route('admin.lots.index') }}" class="nav-link {{ request()->routeIs('admin.lots.*') ? 'active' : '' }}">
+                        <i class="nav-icon fas fa-box"></i>
+                        <p>Lot Management</p>
+                    </a>
+                </li>
+                @else
+                <li class="nav-item">
+                    <a href="{{ route('agent.lots.index') }}" class="nav-link {{ request()->routeIs('agent.lots.*') ? 'active' : '' }}">
+                        <i class="nav-icon fas fa-box"></i>
+                        <p>Lot Management</p>
+                    </a>
+                </li>
+                @endif
+                
+                <!-- Excel Import for all users -->
+                @if(Auth::user()->hasRole('admin'))
+                <li class="nav-item">
+                    <a href="{{ route('admin.excel-import.index') }}" class="nav-link {{ request()->routeIs('admin.excel-import.*') ? 'active' : '' }}">
+                        <i class="nav-icon fas fa-sync-alt text-success"></i>
+                        <p>Excel Import</p>
+                        <span class="badge badge-success right">Sync</span>
+                    </a>
+                </li>
+                @else
+                <li class="nav-item">
+                    <a href="{{ route('agent.excel-import.index') }}" class="nav-link {{ request()->routeIs('agent.excel-import.*') ? 'active' : '' }}">
+                        <i class="nav-icon fas fa-sync-alt text-success"></i>
+                        <p>Excel Import</p>
+                        <span class="badge badge-success right">Sync</span>
+                    </a>
+                </li>
+                @endif
                 
                 @if(Auth::user()->hasRole('admin'))
                 <li class="nav-header">ADMINISTRATION</li>

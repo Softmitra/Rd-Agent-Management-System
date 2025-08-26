@@ -10,13 +10,54 @@
 
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1 class="h3 mb-0">Dashboard</h1>
-        <a href="{{ route('collections.index') }}" class="btn btn-primary">
-            <i class="fas fa-money-bill-wave me-1"></i>
-            Enter Collection
-        </a>
+        @if($incompleteCustomersCount > 0)
+            <div class="btn btn-secondary" 
+                 style="cursor: not-allowed; opacity: 0.6;" 
+                 title="Complete customer information first">
+                <i class="fas fa-money-bill-wave me-1"></i>
+                Enter Collection (Restricted)
+            </div>
+        @else
+            <a href="{{ route('collections.index') }}" class="btn btn-primary">
+                <i class="fas fa-money-bill-wave me-1"></i>
+                Enter Collection
+            </a>
+        @endif
     </div>
 
     @include('components.account-expiration-popup')
+    
+    <!-- Incomplete Customer Warning -->
+    @php
+        $incompleteCustomersCount = \App\Models\Customer::where('agent_id', Auth::user()->id)->incomplete()->count();
+    @endphp
+    
+    @if($incompleteCustomersCount > 0)
+        <div class="alert alert-warning alert-dismissible fade show" role="alert">
+            <div class="d-flex align-items-center">
+                <i class="fas fa-exclamation-triangle fa-2x me-3 text-warning"></i>
+                <div class="flex-grow-1">
+                    <h5 class="alert-heading mb-1">
+                        <i class="fas fa-user-times"></i> Incomplete Customer Information
+                    </h5>
+                    <p class="mb-2">
+                        You have <strong>{{ $incompleteCustomersCount }}</strong> customers with incomplete information. 
+                        Please complete their details before performing lot imports or collection operations.
+                    </p>
+                    <div>
+                        <a href="{{ route('agent.customers.index') }}" class="btn btn-warning btn-sm me-2">
+                            <i class="fas fa-users"></i> Complete Customer Info
+                        </a>
+                        <small class="text-muted">
+                            <i class="fas fa-info-circle"></i> 
+                            Lot and collection imports are restricted until all customer information is complete.
+                        </small>
+                    </div>
+                </div>
+            </div>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    @endif
 
     <div class="row">
         <div class="col-md-3">
@@ -48,6 +89,81 @@
                 <div class="card-body">
                     <h5 class="card-title">Today's Collections</h5>
                     <h2 class="card-text">{{ $todayPayments }}</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-primary">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-cogs"></i> Quick Actions</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            @if($incompleteCustomersCount > 0)
+                                <div class="btn btn-secondary btn-lg w-100 d-flex align-items-center justify-content-center" 
+                                     style="cursor: not-allowed; opacity: 0.6;" 
+                                     title="Complete customer information first">
+                                    <i class="fas fa-sync-alt me-2"></i>
+                                    <div>
+                                        <div class="fw-bold">Sync Data</div>
+                                        <small class="text-muted">Restricted</small>
+                                    </div>
+                                </div>
+                            @else
+                                <a href="{{ route('agent.excel-import.index') }}" class="btn btn-success btn-lg w-100 d-flex align-items-center justify-content-center">
+                                    <i class="fas fa-sync-alt me-2"></i>
+                                    <div>
+                                        <div class="fw-bold">Sync Data</div>
+                                        <small>Import Excel Files</small>
+                                    </div>
+                                </a>
+                            @endif
+                        </div>
+                        <div class="col-md-3">
+                            <a href="{{ route('agent.rd-agent-accounts.create') }}" class="btn btn-info btn-lg w-100 d-flex align-items-center justify-content-center">
+                                <i class="fas fa-plus-circle me-2"></i>
+                                <div>
+                                    <div class="fw-bold">New RD Account</div>
+                                    <small>Manual Entry</small>
+                                </div>
+                            </a>
+                        </div>
+                        <div class="col-md-3">
+                            @if($incompleteCustomersCount > 0)
+                                <div class="btn btn-secondary btn-lg w-100 d-flex align-items-center justify-content-center" 
+                                     style="cursor: not-allowed; opacity: 0.6;" 
+                                     title="Complete customer information first">
+                                    <i class="fas fa-money-bill-wave me-2"></i>
+                                    <div>
+                                        <div class="fw-bold">Enter Collection</div>
+                                        <small class="text-muted">Restricted</small>
+                                    </div>
+                                </div>
+                            @else
+                                <a href="{{ route('collections.create') }}" class="btn btn-primary btn-lg w-100 d-flex align-items-center justify-content-center">
+                                    <i class="fas fa-money-bill-wave me-2"></i>
+                                    <div>
+                                        <div class="fw-bold">Enter Collection</div>
+                                        <small>Record Payment</small>
+                                    </div>
+                                </a>
+                            @endif
+                        </div>
+                        <div class="col-md-3">
+                            <a href="{{ route('agent.rd-agent-accounts.export') }}" class="btn btn-warning btn-lg w-100 d-flex align-items-center justify-content-center">
+                                <i class="fas fa-download me-2"></i>
+                                <div>
+                                    <div class="fw-bold">Export Data</div>
+                                    <small>Download Reports</small>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

@@ -34,6 +34,10 @@ class DashboardController extends Controller
         ];
 
         $user = auth()->user();
+        
+        // Get incomplete customers count using the new scope
+        $incompleteCustomersCount = Customer::where('agent_id', $user->id)->incomplete()->count();
+        
         $data = [
             'user' => $user,
             'totalCustomers' => $user->customers()->count(),
@@ -43,6 +47,7 @@ class DashboardController extends Controller
             'recentCustomers' => $user->customers()->latest()->take(5)->get(),
             'recentPayments' => $user->payments()->with('customer')->latest()->take(5)->get(),
             'rdStats' => $rdStats,
+            'incompleteCustomersCount' => $incompleteCustomersCount,
         ];
         return view('agent.dashboard', $data);
     }

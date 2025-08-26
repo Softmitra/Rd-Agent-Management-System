@@ -18,7 +18,15 @@ class RDAgentAccount extends Controller
      */
     public function index(Request $request)
     {
-        $query = RDAccount::withoutGlobalScopes()->with(['customer', 'agent']);
+        // Only show RD accounts for the logged-in agent
+        $query = RDAccount::withoutGlobalScopes()
+                         ->with(['customer', 'agent'])
+                         ->where('agent_id', Auth::id());
+        
+        // Get completion counts
+        $totalRdAccounts = RDAccount::where('agent_id', Auth::id())->count();
+        $incompleteRdAccounts = RDAccount::where('agent_id', Auth::id())->incomplete()->count();
+        $completeRdAccounts = $totalRdAccounts - $incompleteRdAccounts;
 
         // Apply filters
         if ($request->filled('search')) {
@@ -30,6 +38,11 @@ class RDAgentAccount extends Controller
                         $q->where('name', 'like', "%{$search}%");
                     });
             });
+        }
+
+        // Handle export request
+        if ($request->has('export')) {
+            return $this->export($request);
         }
 
         if ($request->filled('status')) {
@@ -59,7 +72,7 @@ class RDAgentAccount extends Controller
         // Get paginated results
         $rdAccounts = $query->latest()->paginate(10)->withQueryString();
 
-        return view('agent.rd-agent-accounts.index', compact('rdAccounts', 'summary'));
+        return view('agent.rd-agent-accounts.index', compact('rdAccounts', 'summary', 'totalRdAccounts', 'incompleteRdAccounts', 'completeRdAccounts'));
     }
 
     /**
@@ -67,7 +80,8 @@ class RDAgentAccount extends Controller
      */
     public function create()
     {
-        $customers = Customer::all();
+        // Get only customers assigned to the logged-in agent
+        $customers = Customer::where('agent_id', Auth::id())->get();
         return view('agent.rd-agent-accounts.create', compact('customers'));
     }
 
@@ -79,14 +93,19 @@ class RDAgentAccount extends Controller
         try {
             $validated = $request->validate([
                 'customer_id' => 'required|exists:customers,id',
-                'monthly_amount' => 'required|numeric|min:0',
+                'monthly_amount' => 'required|numeric|min:100|regex:/^[1-9]\d*00$/',
                 'opening_date' => 'required|date_format:d/m/Y',
                 'total_deposited' => 'required|numeric|min:0',
+                'installments_paid' => 'required|integer|min:0',
                 'account_number' => 'required|string|unique:rd_accounts,account_number',
-                'registered_phone' => 'required|string|size:10',
+                'registered_phone' => 'nullable|string|size:10',
                 'is_joint_account' => 'boolean',
                 'joint_holder_name' => 'required_if:is_joint_account,1',
                 'note' => 'nullable|string|max:500'
+            ], [
+                'monthly_amount.regex' => 'Monthly amount must be in multiples of ₹100.',
+                'monthly_amount.min' => 'Monthly amount must be at least ₹100.',
+                'installments_paid.min' => 'Installments paid cannot be negative.',
             ]);
 
             // Set default duration months to 60
@@ -103,9 +122,18 @@ class RDAgentAccount extends Controller
             // Calculate installments paid based on total deposited amount
             $validated['installments_paid'] = (int) floor($validated['total_deposited'] / $validated['monthly_amount']);
 
-            // Get customer's agent_id
-            $customer = Customer::findOrFail($validated['customer_id']);
-            $validated['agent_id'] = $customer->agent_id;
+            // Ensure the customer belongs to the logged-in agent
+            $customer = Customer::where('id', $validated['customer_id'])
+                               ->where('agent_id', Auth::id())
+                               ->firstOrFail();
+            
+            // Auto-assign registered phone from customer if not provided
+            if (empty($validated['registered_phone'])) {
+                $validated['registered_phone'] = $customer->mobile_number;
+            }
+            
+            // Auto-assign the logged-in agent
+            $validated['agent_id'] = Auth::id();
 
             $validated['account_type'] = 'RD';  // Set default account type
             $validated['status'] = 'active';
@@ -129,7 +157,7 @@ class RDAgentAccount extends Controller
             Log::info('RD Account created successfully:', ['id' => $account->id, 'installments_paid' => $account->installments_paid]);
 
             return redirect()
-                ->route('rd-agent-accounts.index')
+                ->route('agent.rd-agent-accounts.index')
                 ->with('success', 'RD Account created successfully.');
         } catch (\Exception $e) {
             Log::error('RD Account creation failed: ' . $e->getMessage());
@@ -144,6 +172,24 @@ class RDAgentAccount extends Controller
      */
     public function show(RDAccount $rdAccount)
     {
+        // Debug logging
+        Log::info('RD Account Show Debug', [
+            'rdAccount_id' => $rdAccount->id,
+            'rdAccount_agent_id' => $rdAccount->agent_id,
+            'auth_user_id' => Auth::id(),
+            'auth_user' => Auth::user()
+        ]);
+        
+        // Ensure the RD account belongs to the logged-in agent
+        if ($rdAccount->agent_id !== Auth::id()) {
+            Log::warning('Unauthorized RD Account access attempt', [
+                'rdAccount_id' => $rdAccount->id,
+                'rdAccount_agent_id' => $rdAccount->agent_id,
+                'auth_user_id' => Auth::id()
+            ]);
+            abort(403, 'Unauthorized access to this RD account. This account belongs to agent ID: ' . $rdAccount->agent_id . ', but you are agent ID: ' . Auth::id());
+        }
+        
         $rdAccount->load(['customer', 'agent', 'creator', 'updater']);
         return view('agent.rd-agent-accounts.show', compact('rdAccount'));
     }
@@ -153,8 +199,27 @@ class RDAgentAccount extends Controller
      */
     public function edit(RDAccount $rdAccount)
     {
-        $customers = Customer::all();
-        return view('rd-agent-accounts.edit', compact('rdAccount', 'customers'));
+        // Debug logging
+        Log::info('RD Account Edit Debug', [
+            'rdAccount_id' => $rdAccount->id,
+            'rdAccount_agent_id' => $rdAccount->agent_id,
+            'auth_user_id' => Auth::id(),
+            'auth_user' => Auth::user()
+        ]);
+        
+        // Ensure the RD account belongs to the logged-in agent
+        if ($rdAccount->agent_id !== Auth::id()) {
+            Log::warning('Unauthorized RD Account edit attempt', [
+                'rdAccount_id' => $rdAccount->id,
+                'rdAccount_agent_id' => $rdAccount->agent_id,
+                'auth_user_id' => Auth::id()
+            ]);
+            abort(403, 'Unauthorized access to this RD account. This account belongs to agent ID: ' . $rdAccount->agent_id . ', but you are agent ID: ' . Auth::id());
+        }
+        
+        // Get only customers assigned to the logged-in agent
+        $customers = Customer::where('agent_id', Auth::id())->get();
+        return view('agent.rd-agent-accounts.edit', compact('rdAccount', 'customers'));
     }
 
     /**
@@ -162,36 +227,77 @@ class RDAgentAccount extends Controller
      */
     public function update(Request $request, RDAccount $rdAccount)
     {
-        $validated = $request->validate([
-            'customer_id' => 'required|exists:customers,id',
-            'monthly_amount' => 'required|numeric|min:0',
-            'duration_months' => 'required|integer|min:1',
-            'interest_rate' => 'required|numeric|min:0|max:100',
-            'start_date' => 'required|date',
-            'status' => 'required|in:active,matured,closed',
-            'remarks' => 'nullable|string|max:500',
-        ]);
+        try {
+            // Ensure the RD account belongs to the logged-in agent
+            if ($rdAccount->agent_id !== Auth::id()) {
+                abort(403, 'Unauthorized access to this RD account.');
+            }
+            
+            $validated = $request->validate([
+                'account_number' => 'required|string|unique:rd_accounts,account_number,' . $rdAccount->id,
+                'customer_id' => 'required|exists:customers,id',
+                'monthly_amount' => 'required|numeric|min:100|regex:/^[1-9]\d*00$/',
+                'opening_date' => 'required|date_format:d/m/Y',
+                'duration_months' => 'required|integer|min:1|max:120',
+                'interest_rate' => 'required|numeric|min:0|max:100',
+                'status' => 'required|in:active,matured,closed',
+                'registered_phone' => 'nullable|string|size:10|regex:/^[0-9]{10}$/',
+                'note' => 'nullable|string|max:500',
+                'is_joint_account' => 'boolean',
+                'joint_holder_name' => 'required_if:is_joint_account,1|nullable|string|max:255',
+            ], [
+                'monthly_amount.regex' => 'Monthly amount must be in multiples of ₹100.',
+                'registered_phone.regex' => 'Phone number must be exactly 10 digits.',
+                'duration_months.max' => 'Duration cannot exceed 120 months (10 years).',
+            ]);
 
-        // Recalculate maturity date and amount if relevant fields changed
-        if ($request->start_date !== $rdAccount->start_date ||
-                $request->duration_months !== $rdAccount->duration_months) {
-            $validated['maturity_date'] = date('Y-m-d', strtotime($validated['start_date'] . " + {$validated['duration_months']} months"));
+            // Ensure the customer belongs to the logged-in agent
+            $customer = Customer::where('id', $validated['customer_id'])
+                               ->where('agent_id', Auth::id())
+                               ->firstOrFail();
+
+            // Convert date format from d/m/Y to Y-m-d
+            $validated['start_date'] = \Carbon\Carbon::createFromFormat('d/m/Y', $validated['opening_date'])->format('Y-m-d');
+            unset($validated['opening_date']);
+
+            // Handle joint account
+            $validated['is_joint_account'] = $request->has('is_joint_account');
+            if (!$validated['is_joint_account']) {
+                $validated['joint_holder_name'] = null;
+            }
+
+            // Calculate maturity date
+            $validated['maturity_date'] = \Carbon\Carbon::createFromFormat('d/m/Y', $request->opening_date)
+                ->addMonths($validated['duration_months'])
+                ->format('Y-m-d');
+
+            // Calculate maturity amount
+            $totalDeposits = $validated['monthly_amount'] * $validated['duration_months'];
+            $interest = $totalDeposits * ($validated['interest_rate'] / 100);
+            $validated['maturity_amount'] = $totalDeposits + $interest;
+
+            // Set updated_by
+            $validated['updated_by'] = Auth::id();
+
+            // Log the update
+            Log::info('Updating RD Account', [
+                'account_id' => $rdAccount->id,
+                'agent_id' => Auth::id(),
+                'changes' => $validated
+            ]);
+
+            $rdAccount->update($validated);
+
+            return redirect()
+                ->route('agent.rd-agent-accounts.show', $rdAccount)
+                ->with('success', 'RD Account updated successfully.');
+
+        } catch (\Exception $e) {
+            Log::error('RD Account update failed: ' . $e->getMessage());
+            return back()
+                ->withInput()
+                ->with('error', 'Failed to update RD Account. Please check all fields and try again. Error: ' . $e->getMessage());
         }
-
-        if ($request->monthly_amount !== $rdAccount->monthly_amount ||
-                $request->duration_months !== $rdAccount->duration_months ||
-                $request->interest_rate !== $rdAccount->interest_rate) {
-            $validated['maturity_amount'] = $validated['monthly_amount'] * $validated['duration_months']
-                * (1 + ($validated['interest_rate'] / 100));
-        }
-
-        $validated['updated_by'] = Auth::id();
-
-        $rdAccount->update($validated);
-
-        return redirect()
-            ->route('rd-agent-accounts.index')
-            ->with('success', 'RD Account updated successfully.');
     }
 
     /**
@@ -199,9 +305,14 @@ class RDAgentAccount extends Controller
      */
     public function destroy(RDAccount $rdAccount)
     {
+        // Ensure the RD account belongs to the logged-in agent
+        if ($rdAccount->agent_id !== Auth::id()) {
+            abort(403, 'Unauthorized access to this RD account.');
+        }
+        
         $rdAccount->delete();
         return redirect()
-            ->route('rd-agent-accounts.index')
+            ->route('agent.rd-agent-accounts.index')
             ->with('success', 'RD Account deleted successfully.');
     }
 
@@ -210,6 +321,11 @@ class RDAgentAccount extends Controller
      */
     public function close(RDAccount $rdAccount)
     {
+        // Ensure the RD account belongs to the logged-in agent
+        if ($rdAccount->agent_id !== Auth::id()) {
+            abort(403, 'Unauthorized access to this RD account.');
+        }
+        
         if ($rdAccount->status === 'closed') {
             return back()->with('error', 'RD Account is already closed.');
         }
@@ -220,7 +336,7 @@ class RDAgentAccount extends Controller
         ]);
 
         return redirect()
-            ->route('rd-agent-accounts.show', $rdAccount)
+            ->route('agent.rd-agent-accounts.show', $rdAccount)
             ->with('success', 'RD Account closed successfully.');
     }
 
@@ -229,6 +345,11 @@ class RDAgentAccount extends Controller
      */
     public function mature(RDAccount $rdAccount)
     {
+        // Ensure the RD account belongs to the logged-in agent
+        if ($rdAccount->agent_id !== Auth::id()) {
+            abort(403, 'Unauthorized access to this RD account.');
+        }
+        
         if ($rdAccount->status === 'matured') {
             return back()->with('error', 'RD Account is already marked as matured.');
         }
@@ -239,7 +360,7 @@ class RDAgentAccount extends Controller
         ]);
 
         return redirect()
-            ->route('rd-agent-accounts.show', $rdAccount)
+            ->route('agent.rd-agent-accounts.show', $rdAccount)
             ->with('success', 'RD Account marked as matured successfully.');
     }
 
@@ -248,7 +369,9 @@ class RDAgentAccount extends Controller
      */
     public function export(Request $request)
     {
-        $query = RDAccount::with(['customer', 'agent']);
+        // Only export RD accounts for the logged-in agent
+        $query = RDAccount::with(['customer', 'agent'])
+                         ->where('agent_id', Auth::id());
 
         // Apply filters
         if ($request->filled('status')) {
@@ -283,8 +406,92 @@ class RDAgentAccount extends Controller
         }
 
         $rdAccounts = $query->latest()->get();
-        $fileName = 'rd_accounts_' . date('Y-m-d_H-i-s') . '.xlsx';
+        $agentName = Auth::user()->name;
+        $fileName = 'rd_accounts_' . str_replace(' ', '_', $agentName) . '_' . date('Y-m-d_H-i-s') . '.xlsx';
 
         return Excel::download(new RDAccountsExport($rdAccounts), $fileName);
+    }
+
+    /**
+     * Get incomplete RD accounts for completion modal
+     */
+    public function getIncompleteRdAccounts()
+    {
+        // Get current authenticated agent
+        $agent = Auth::user();
+        
+        $incompleteRdAccounts = RDAccount::where('agent_id', $agent->id)
+            ->incomplete()
+            ->with(['customer'])
+            ->limit(10) // Show only first 10 for completion
+            ->get();
+            
+        return response()->json([
+            'rdAccounts' => $incompleteRdAccounts,
+            'count' => $incompleteRdAccounts->count()
+        ]);
+    }
+    
+    /**
+     * Complete RD account details
+     */
+    public function completeRdAccount(Request $request, RDAccount $rdAccount)
+    {
+        // Get current authenticated agent
+        $agent = Auth::user();
+        
+        // Ensure RD account belongs to this agent
+        if ($rdAccount->agent_id !== $agent->id) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+        
+        $validated = $request->validate([
+            'aslaas_number' => 'required|string|max:255',
+            'registered_phone' => 'required|string|size:10',
+            'monthly_amount' => 'required|numeric|min:100',
+            'start_date' => 'required|date',
+            'note' => 'nullable|string|max:500',
+        ]);
+        
+        // Apply same logic as RD account creation
+        // Set default duration months to 60 (same as creation logic)
+        $validated['duration_months'] = 60;
+        
+        // Set default interest rate to 6.5% (same as creation logic)
+        $validated['interest_rate'] = 6.5;
+        
+        // Auto-calculate maturity date based on start_date + duration_months
+        $startDate = Carbon::parse($validated['start_date']);
+        $validated['maturity_date'] = $startDate->copy()->addMonths($validated['duration_months'])->format('Y-m-d');
+        
+        // Auto-calculate maturity amount
+        $validated['maturity_amount'] = $validated['monthly_amount'] * $validated['duration_months'];
+        
+        // Auto-calculate half_month_period based on start_date day
+        $validated['half_month_period'] = $startDate->day <= 15 ? 'first' : 'second';
+        
+        // Set other default values if not already set
+        if (empty($rdAccount->account_type)) {
+            $validated['account_type'] = 'RD';
+        }
+        if (empty($rdAccount->status)) {
+            $validated['status'] = 'active';
+        }
+        
+        // Set updated_by
+        $validated['updated_by'] = $agent->id;
+        
+        $rdAccount->update($validated);
+        
+        // Mark RD account as complete if information is sufficient
+        if ($rdAccount->isInfoComplete()) {
+            $rdAccount->markAsComplete('Completed via completion modal');
+        }
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'RD Account details completed successfully.',
+            'rdAccount' => $rdAccount
+        ]);
     }
 }

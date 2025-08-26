@@ -9,12 +9,15 @@ use App\Http\Controllers\AgentController;
 use App\Http\Controllers\CollectionController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\ExcelImportController;
+use App\Http\Controllers\LotController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RDAccountController;
 use App\Http\Controllers\RDAgentAccount;
 use App\Http\Controllers\RoleController;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -64,6 +67,7 @@ Route::prefix('admin')->middleware(['auth', 'role:admin'])->group(function () {
     Route::post('/agents/{agent}/activate', [AgentController::class, 'activate'])->name('agents.activate');
     Route::post('/agents/{agent}/deactivate', [AgentController::class, 'deactivate'])->name('agents.deactivate');
     Route::post('/agents/{agent}/update-expiration', [AgentController::class, 'updateExpiration'])->name('agents.update-expiration');
+    Route::get('/agents/{agent}/document/{type}', [AgentController::class, 'viewDocument'])->name('agents.document');
     Route::resource('rd-accounts', RDAccountController::class)->names([
         'index' => 'admin.rd-accounts.index',
         'create' => 'admin.rd-accounts.create',
@@ -78,12 +82,42 @@ Route::prefix('admin')->middleware(['auth', 'role:admin'])->group(function () {
     Route::post('rd-accounts/{rdAccount}/close', [RDAccountController::class, 'close'])->name('admin.rd-accounts.close');
     Route::post('rd-accounts/{rdAccount}/mature', [RDAccountController::class, 'mature'])->name('admin.rd-accounts.mature');
     Route::resource('roles', RoleController::class);
+    
+    // Admin Lot Management Routes
+    Route::resource('lots', LotController::class)->names([
+        'index' => 'admin.lots.index',
+        'create' => 'admin.lots.create',
+        'store' => 'admin.lots.store',
+        'show' => 'admin.lots.show',
+        'edit' => 'admin.lots.edit',
+        'update' => 'admin.lots.update',
+        'destroy' => 'admin.lots.destroy'
+    ]);
+    
+    // Admin Additional Lot Routes
+    Route::get('lots-import', [LotController::class, 'showImport'])->name('admin.lots.import');
+    Route::post('lots-import', [LotController::class, 'import'])->name('admin.lots.import.store');
+    Route::post('lots/{lot}/assign-collection', [LotController::class, 'assignCollection'])->name('admin.lots.assign-collection');
+    Route::post('lots/{lot}/remove-collection', [LotController::class, 'removeCollection'])->name('admin.lots.remove-collection');
+    Route::get('lots/{lot}/download-errors', [LotController::class, 'downloadErrors'])->name('admin.lots.download-errors');
+    Route::post('lots/{lot}/finalize', [LotController::class, 'finalize'])->name('admin.lots.finalize');
+    Route::post('lots/{lot}/verify', [LotController::class, 'verify'])->name('admin.lots.verify');
+    
+    // Excel Import Routes
+    Route::get('excel-import', [ExcelImportController::class, 'index'])->name('admin.excel-import.index');
+    Route::post('excel-import/upload', [ExcelImportController::class, 'upload'])->name('admin.excel-import.upload');
+    Route::post('excel-import/import', [ExcelImportController::class, 'import'])->name('admin.excel-import.import');
+    Route::get('excel-import/agents', [ExcelImportController::class, 'getAgents'])->name('admin.excel-import.agents');
+    
+    // API route to fetch customer's RD accounts for duplicate checking
+    Route::get('customers/{customer}/rd-accounts', [CustomerController::class, 'getRdAccounts'])->name('admin.customers.rd-accounts');
 });
 
 // Agent Routes
 Route::prefix('agent')->middleware(['auth', 'agent.access'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
-    Route::resource('rd-agent-accounts', RDAgentAccount::class);
+    
+    // RD Agent Accounts Routes
     Route::resource('rd-agent-accounts', RDAgentAccount::class)->names([
         'index' => 'agent.rd-agent-accounts.index',
         'create' => 'agent.rd-agent-accounts.create',
@@ -92,12 +126,81 @@ Route::prefix('agent')->middleware(['auth', 'agent.access'])->group(function () 
         'edit' => 'agent.rd-agent-accounts.edit',
         'update' => 'agent.rd-agent-accounts.update',
         'destroy' => 'agent.rd-agent-accounts.destroy'
+    ])->parameters([
+        'rd-agent-accounts' => 'rdAccount'
     ]);
-
-    Route::post('rd-agent-accounts/{rdAccount}/close', [RDAgentAccount::class, 'close'])->name('rd-agent-accounts.close');
-    Route::post('rd-agent-accounts/{rdAccount}/mature', [RDAgentAccount::class, 'mature'])->name('rd-agent-accounts.mature');
+    
+    Route::post('rd-agent-accounts/{rdAccount}/close', [RDAgentAccount::class, 'close'])->name('agent.rd-agent-accounts.close');
+    Route::post('rd-agent-accounts/{rdAccount}/mature', [RDAgentAccount::class, 'mature'])->name('agent.rd-agent-accounts.mature');
+    Route::get('rd-agent-accounts-export', [RDAgentAccount::class, 'export'])->name('agent.rd-agent-accounts.export');
+    
+    // RD Account completion routes
+    Route::get('rd-accounts/incomplete', [RDAgentAccount::class, 'getIncompleteRdAccounts'])->name('agent.rd-accounts.api.incomplete');
+    Route::post('rd-accounts/{rdAccount}/complete', [RDAgentAccount::class, 'completeRdAccount'])->name('agent.rd-accounts.complete');
+    
+    // Lot Management Routes for Agents
+    Route::resource('lots', LotController::class)->names([
+        'index' => 'agent.lots.index',
+        'create' => 'agent.lots.create',
+        'store' => 'agent.lots.store',
+        'show' => 'agent.lots.show',
+        'edit' => 'agent.lots.edit',
+        'update' => 'agent.lots.update',
+        'destroy' => 'agent.lots.destroy'
+    ])->middleware('check.incomplete');
+    
+    // Additional Lot Routes (with incomplete customers check)
+    Route::middleware('check.incomplete')->group(function () {
+        Route::get('lots-import', [LotController::class, 'showImport'])->name('agent.lots.import');
+        Route::post('lots-import', [LotController::class, 'import'])->name('agent.lots.import.store');
+        Route::post('lots/{lot}/assign-collection', [LotController::class, 'assignCollection'])->name('agent.lots.assign-collection');
+        Route::post('lots/{lot}/remove-collection', [LotController::class, 'removeCollection'])->name('agent.lots.remove-collection');
+        Route::post('lots/{lot}/finalize', [LotController::class, 'finalize'])->name('agent.lots.finalize');
+    });
+    
+    // Routes that don't need completion check
+    Route::get('lots/{lot}/download-errors', [LotController::class, 'downloadErrors'])->name('agent.lots.download-errors');
+    
+    // Other Agent Routes
     Route::resource('payments', PaymentController::class);
-    Route::resource('collections', CollectionController::class);
+    Route::resource('collections', CollectionController::class)->middleware('check.incomplete:customers');
+    
+    // Excel Import Routes for Agents
+    Route::get('excel-import', [ExcelImportController::class, 'index'])->name('agent.excel-import.index');
+    Route::post('excel-import/upload', [ExcelImportController::class, 'upload'])->name('agent.excel-import.upload');
+    Route::post('excel-import/import', [ExcelImportController::class, 'import'])->name('agent.excel-import.import');
+    Route::get('excel-import/agents', [ExcelImportController::class, 'getAgents'])->name('agent.excel-import.agents');
+    
+    // Test route to check agent authentication
+    Route::get('/test-agent-id', function () {
+        $agent = Auth::user();
+        return response()->json([
+            'agent_id' => $agent ? $agent->id : null,
+            'agent_name' => $agent ? $agent->name : null,
+            'agent_email' => $agent ? $agent->email : null,
+            'is_agent_model' => $agent instanceof \App\Models\Agent,
+            'auth_guard' => Auth::getDefaultDriver(),
+            'auth_check' => Auth::check(),
+            'message' => 'Agent authentication test'
+        ]);
+    });
+    
+    // Agent Customer Management Routes
+    Route::prefix('customers')->name('agent.customers.')->group(function () {
+        Route::get('/', [App\Http\Controllers\Agent\CustomerController::class, 'index'])->name('index');
+        Route::get('/create', [App\Http\Controllers\Agent\CustomerController::class, 'create'])->name('create');
+        Route::post('/', [App\Http\Controllers\Agent\CustomerController::class, 'store'])->name('store');
+        Route::get('/{customer}', [App\Http\Controllers\Agent\CustomerController::class, 'show'])->name('show');
+        Route::get('/{customer}/edit', [App\Http\Controllers\Agent\CustomerController::class, 'edit'])->name('edit');
+        Route::put('/{customer}', [App\Http\Controllers\Agent\CustomerController::class, 'update'])->name('update');
+        
+        // AJAX routes for incomplete customer completion
+        Route::get('/api/incomplete', [App\Http\Controllers\Agent\CustomerController::class, 'getIncompleteCustomers'])->name('api.incomplete');
+        Route::post('/{customer}/complete', [App\Http\Controllers\Agent\CustomerController::class, 'completeCustomer'])->name('complete');
+        
+        // API route to fetch customer's RD accounts for duplicate checking
+        Route::get('/{customer}/rd-accounts', [CustomerController::class, 'getRdAccounts'])->name('rd-accounts');
+    });
 });
 
 // Common Routes (accessible to both agents and admins)

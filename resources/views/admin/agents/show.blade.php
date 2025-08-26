@@ -101,16 +101,69 @@
                         <div class="col-md-12">
                             <div class="form-group">
                                 <label>Documents</label>
-                                <div>
+                                <div class="row">
                                     @if($agent->aadhar_file)
-                                        <a href="{{ Storage::url($agent->aadhar_file) }}" target="_blank" class="btn btn-info mr-2">
-                                            <i class="fas fa-id-card"></i> View Aadhar Card
-                                        </a>
+                                        <div class="col-md-6">
+                                            <div class="card document-card">
+                                                <div class="card-header">
+                                                    <h6 class="mb-0">
+                                                        <i class="fas fa-id-card text-primary"></i> Aadhar Card
+                                                    </h6>
+                                                </div>
+                                                <div class="card-body text-center">
+                                                    <div class="document-preview mb-3">
+                                                        @php
+                                                            $fileExtension = pathinfo($agent->aadhar_file, PATHINFO_EXTENSION);
+                                                            $isPdf = strtolower($fileExtension) === 'pdf';
+                                                        @endphp
+                                                        @if($isPdf)
+                                                            <i class="fas fa-file-pdf fa-4x text-danger"></i>
+                                                            <p class="mt-2 text-muted">PDF Document</p>
+                                                        @else
+                                                            <img src="{{ Storage::url($agent->aadhar_file) }}" alt="Aadhar Card" class="img-thumbnail" style="max-height: 120px; cursor: pointer;" onclick="viewDocument('{{ route('agents.document', [$agent, 'aadhar']) }}', 'Aadhar Card', '{{ $isPdf ? 'pdf' : 'image' }}')">
+                                                        @endif
+                                                    </div>
+                                                    <button type="button" class="btn btn-primary btn-sm" onclick="viewDocument('{{ route('agents.document', [$agent, 'aadhar']) }}', 'Aadhar Card', '{{ $isPdf ? 'pdf' : 'image' }}')">
+                                                        <i class="fas fa-eye"></i> View Document
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
                                     @endif
                                     @if($agent->pan_file)
-                                        <a href="{{ Storage::url($agent->pan_file) }}" target="_blank" class="btn btn-info">
-                                            <i class="fas fa-id-card"></i> View PAN Card
-                                        </a>
+                                        <div class="col-md-6">
+                                            <div class="card document-card">
+                                                <div class="card-header">
+                                                    <h6 class="mb-0">
+                                                        <i class="fas fa-id-card text-success"></i> PAN Card
+                                                    </h6>
+                                                </div>
+                                                <div class="card-body text-center">
+                                                    <div class="document-preview mb-3">
+                                                        @php
+                                                            $fileExtension = pathinfo($agent->pan_file, PATHINFO_EXTENSION);
+                                                            $isPdf = strtolower($fileExtension) === 'pdf';
+                                                        @endphp
+                                                        @if($isPdf)
+                                                            <i class="fas fa-file-pdf fa-4x text-danger"></i>
+                                                            <p class="mt-2 text-muted">PDF Document</p>
+                                                        @else
+                                                            <img src="{{ Storage::url($agent->pan_file) }}" alt="PAN Card" class="img-thumbnail" style="max-height: 120px; cursor: pointer;" onclick="viewDocument('{{ route('agents.document', [$agent, 'pan']) }}', 'PAN Card', '{{ $isPdf ? 'pdf' : 'image' }}')">
+                                                        @endif
+                                                    </div>
+                                                    <button type="button" class="btn btn-success btn-sm" onclick="viewDocument('{{ route('agents.document', [$agent, 'pan']) }}', 'PAN Card', '{{ $isPdf ? 'pdf' : 'image' }}')">
+                                                        <i class="fas fa-eye"></i> View Document
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    @endif
+                                    @if(!$agent->aadhar_file && !$agent->pan_file)
+                                        <div class="col-12">
+                                            <div class="alert alert-warning">
+                                                <i class="fas fa-exclamation-triangle"></i> No documents uploaded yet.
+                                            </div>
+                                        </div>
                                     @endif
                                 </div>
                             </div>
@@ -319,6 +372,31 @@
     </div>
 </div>
 
+<!-- Document Viewer Modal -->
+<div class="modal fade" id="documentViewerModal" tabindex="-1" role="dialog" aria-labelledby="documentViewerModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="documentViewerModalLabel">Document Viewer</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body text-center" style="min-height: 500px;">
+                <div id="documentContent">
+                    <!-- Document content will be loaded here -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <a id="downloadLink" href="#" target="_blank" class="btn btn-primary">
+                    <i class="fas fa-download"></i> Download
+                </a>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 @push('scripts')
 <script>
 $(function() {
@@ -340,6 +418,60 @@ $(function() {
         $('#updateExpirationModal').modal('show');
     });
 });
+
+// Function to view documents
+function viewDocument(url, title, type) {
+    $('#documentViewerModalLabel').text(title);
+    $('#downloadLink').attr('href', url);
+    
+    if (type === 'pdf') {
+        $('#documentContent').html(`
+            <embed src="${url}" type="application/pdf" width="100%" height="500px" style="border: none;">
+            <p class="mt-3 text-muted">If the PDF doesn't load, <a href="${url}" target="_blank">click here to open in a new tab</a></p>
+        `);
+    } else {
+        $('#documentContent').html(`
+            <img src="${url}" alt="${title}" class="img-fluid" style="max-width: 100%; max-height: 70vh; border: 1px solid #ddd; border-radius: 4px;">
+        `);
+    }
+    
+    $('#documentViewerModal').modal('show');
+}
 </script>
+
+<style>
+.document-card {
+    margin-bottom: 20px;
+    transition: transform 0.2s ease-in-out;
+    border: 1px solid #e3e6f0;
+}
+
+.document-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.document-preview {
+    min-height: 140px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.document-card .card-header {
+    background-color: #f8f9fc;
+    border-bottom: 1px solid #e3e6f0;
+}
+
+.img-thumbnail {
+    border-radius: 8px;
+    transition: transform 0.2s ease-in-out;
+}
+
+.img-thumbnail:hover {
+    transform: scale(1.05);
+}
+</style>
 @endpush
 @endsection 

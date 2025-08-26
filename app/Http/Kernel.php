@@ -67,5 +67,6 @@ class Kernel extends HttpKernel
         'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
         'role' => \App\Http\Middleware\RoleMiddleware::class,
         'agent.access' => \App\Http\Middleware\CheckAgentAccess::class,
+        'check.incomplete' => \App\Http\Middleware\CheckIncompleteCustomers::class,
     ];
 }

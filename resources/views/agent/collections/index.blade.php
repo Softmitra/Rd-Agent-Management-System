@@ -3,201 +3,287 @@
 @section('title', 'Collections')
 
 @section('content')
-    <div class="container-fluid px-4">
-        <h5 class="mt-1">Collections</h5>
-        <ol class="breadcrumb mb-3">
-            <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Dashboard</a></li>
-            <li class="breadcrumb-item active">Collections</li>
-        </ol>
-
-        @if (session('success'))
-            <div class="alert alert-success">
-                {{ session('success') }}
-            </div>
-        @endif
-
-        @if (session('error'))
-            <div class="alert alert-danger">
-                {{ session('error') }}
-            </div>
-        @endif
-
-        @if ($errors->any())
-            <div class="alert alert-danger">
-                <ul class="mb-0">
-                    @foreach ($errors->all() as $error)
-                        <li>{{ $error }}</li>
-                    @endforeach
-                </ul>
-            </div>
-        @endif
-
-        <!-- Action Buttons -->
-        <div class="d-flex justify-content-between align-items-center mb-3">
-            <h6 class="mb-0">Collection Records</h6>
-            <div>
-                <a href="{{ route('admin.collectionslist.export') }}" class="btn btn-success me-2">
-                    <i class="fas fa-file-excel"></i> Export to Excel
-                </a>
-                <a href="{{ route('collections.create') }}" class="btn btn-primary">
-                    <i class="fas fa-plus"></i> Add Collection Entry
-                </a>
-            </div>
+<div class="container-fluid px-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h5 class="mb-0">Collection Entries</h5>
+        <div>
+            <a href="{{ route('collections.create') }}" class="btn btn-primary">
+                <i class="fas fa-plus"></i> New Collection Entry
+            </a>
+            <a href="{{ route('admin.collectionslist.export', request()->query()) }}" class="btn btn-secondary">
+                <i class="fas fa-file-excel"></i> Export
+            </a>
         </div>
+    </div>
 
-        <!-- Filters -->
-        <div class="card mb-4">
-            <div class="card-header">
-                <i class="fas fa-filter me-1"></i>
-                Filters
-            </div>
-            <div class="card-body">
-                <form method="GET" action="{{ route('collections.index') }}" class="row g-3">
-                    <div class="col-md-3">
-                        <label for="account_number" class="form-label">Account Number</label>
-                        <input type="text" name="account_number" class="form-control" placeholder="Search account..."
-                            value="{{ request('account_number') }}">
-                    </div>
-                    <div class="col-md-3">
+    <div class="card mb-4">
+        <div class="card-body">
+            <!-- Filters -->
+            <form action="{{ route('collections.index') }}" method="GET">
+                <div class="row g-3">
+                    <div class="col-md-4">
                         <label for="customer_name" class="form-label">Customer Name</label>
-                        <input type="text" name="customer_name" class="form-control" placeholder="Search customer..."
-                            value="{{ request('customer_name') }}">
+                        <input type="text" 
+                               class="form-control" 
+                               id="customer_name" 
+                               name="customer_name" 
+                               placeholder="Search by customer name"
+                               value="{{ request('customer_name') }}">
                     </div>
-                    <div class="col-md-2">
-                        <label for="date" class="form-label">Payment Date</label>
-                        <input type="date" name="date" class="form-control"
-                            value="{{ request('date') }}">
+                    
+                    <div class="col-md-3">
+                        <label for="date" class="form-label">Date</label>
+                        <input type="date" 
+                               class="form-control" 
+                               id="date" 
+                               name="date" 
+                               value="{{ request('date') }}">
                     </div>
-                    <div class="col-md-2">
+                    
+                    <div class="col-md-3">
                         <label for="status" class="form-label">Status</label>
-                        <select name="status" class="form-control">
+                        <select class="form-select" id="status" name="status">
                             <option value="">All Status</option>
-                            <option value="Not in Lot" {{ request('status') == 'Not in Lot' ? 'selected' : '' }}>Not in Lot
-                            </option>
-                            <option value="completed" {{ request('status') == 'completed' ? 'selected' : '' }}>Completed
-                            </option>
-                            <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>Pending</option>
+                            <option value="submitted" {{ request('status') == 'submitted' ? 'selected' : '' }}>Submitted</option>
+                            <option value="verified" {{ request('status') == 'verified' ? 'selected' : '' }}>Verified</option>
+                            <option value="approved" {{ request('status') == 'approved' ? 'selected' : '' }}>Approved</option>
+                            <option value="rejected" {{ request('status') == 'rejected' ? 'selected' : '' }}>Rejected</option>
                         </select>
                     </div>
-                    <div class="col-md-2">
-                        <label class="form-label">&nbsp;</label>
-                        <div>
-                            <button type="submit" class="btn btn-primary">Filter</button>
-                            <a href="{{ route('collections.index') }}" class="btn btn-secondary">Reset</a>
+                    
+                    <div class="col-md-2 d-flex align-items-end">
+                        <div class="btn-group w-100">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-search"></i> Search
+                            </button>
+                            <a href="{{ route('collections.index') }}" class="btn btn-outline-secondary">
+                                <i class="fas fa-times"></i> Clear
+                            </a>
                         </div>
                     </div>
-                </form>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Results Summary -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <span class="text-muted">
+                Showing {{ $collections->firstItem() ?? 0 }} to {{ $collections->lastItem() ?? 0 }} 
+                of {{ $collections->total() }} results
+            </span>
+        </div>
+        <div>
+            @if(request()->hasAny(['customer_name', 'date', 'status']))
+                <small class="text-muted">
+                    <i class="fas fa-filter"></i> Filters applied
+                </small>
+            @endif
+        </div>
+    </div>
+
+    <!-- Data Table -->
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped table-hover">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Date</th>
+                            <th>Customer Name</th>
+                            <th>Payment Type</th>
+                            <th>Amount</th>
+                            <th>Status</th>
+                            <th>Note</th>
+                            <th>Created At</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse($collections as $collection)
+                        <tr>
+                            <td>{{ \Carbon\Carbon::parse($collection->date)->format('d/m/Y') }}</td>
+                            <td>
+                                @if($collection->customer)
+                                    <strong>{{ $collection->customer->name }}</strong>
+                                    @if($collection->customer->mobile_number)
+                                        <br><small class="text-muted">{{ $collection->customer->mobile_number }}</small>
+                                    @endif
+                                @else
+                                    <span class="text-muted">N/A</span>
+                                @endif
+                            </td>
+                            <td>
+                                <span class="badge bg-{{ $collection->payment_type == 'cash' ? 'success' : 'primary' }}">
+                                    {{ strtoupper($collection->payment_type) }}
+                                </span>
+                            </td>
+                            <td>
+                                <strong>₹{{ number_format($collection->amount, 2) }}</strong>
+                            </td>
+                            <td>
+                                @php
+                                    $statusColors = [
+                                        'submitted' => 'warning',
+                                        'verified' => 'info',
+                                        'approved' => 'success',
+                                        'rejected' => 'danger'
+                                    ];
+                                    $color = $statusColors[$collection->status] ?? 'secondary';
+                                @endphp
+                                <span class="badge bg-{{ $color }}">
+                                    {{ ucfirst($collection->status) }}
+                                </span>
+                            </td>
+                            <td>
+                                @if($collection->note)
+                                    <span class="text-truncate d-inline-block" style="max-width: 150px;" 
+                                          title="{{ $collection->note }}">
+                                        {{ $collection->note }}
+                                    </span>
+                                @else
+                                    <span class="text-muted">-</span>
+                                @endif
+                            </td>
+                            <td>
+                                <small class="text-muted">
+                                    {{ $collection->created_at->format('d/m/Y H:i') }}
+                                </small>
+                            </td>
+                            <td>
+                                <div class="btn-group">
+                                    <button class="btn btn-sm btn-outline-info" 
+                                            title="View Details"
+                                            onclick="alert('Collection ID: {{ $collection->id }}')">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                    
+                                    @if($collection->status == 'submitted')
+                                        <button class="btn btn-sm btn-outline-warning" 
+                                                title="Edit Collection" 
+                                                onclick="alert('Edit functionality coming soon!')">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                    @endif
+                                </div>
+                            </td>
+                        </tr>
+                        @empty
+                        <tr>
+                            <td colspan="8" class="text-center py-5">
+                                <div class="text-muted">
+                                    <i class="fas fa-inbox fa-3x mb-3"></i>
+                                    <h5>No Collection Entries Found</h5>
+                                    <p>No collections match your current filters.</p>
+                                    <a href="{{ route('collections.create') }}" class="btn btn-primary">
+                                        <i class="fas fa-plus"></i> Create Your First Collection Entry
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            @if($collections->hasPages())
+                <div class="d-flex justify-content-center mt-4">
+                    {{ $collections->withQueryString()->links() }}
+                </div>
+            @endif
+        </div>
+    </div>
+
+    <!-- Summary Cards -->
+    @if($collections->count() > 0)
+    <div class="row mt-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="card-title">Total Collections</h6>
+                            <h4>{{ $collections->total() }}</h4>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-list fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
-
-        <!-- Collections Table -->
-        <div class="card">
-            <div class="card-header">
-                <i class="fas fa-table me-1"></i>
-                Collection Records
+        
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="card-title">Total Amount</h6>
+                            <h4>₹{{ number_format($collections->sum('amount'), 2) }}</h4>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-rupee-sign fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div class="card-body">
-                @if ($collections->count() > 0)
-                    <div class="table-responsive">
-                        <table class="table table-striped table-hover">
-                            <thead class="table-dark">
-                                <tr>
-                                    <th>Receipt No.</th>
-                                    <th>Customer Name</th>
-                                    <th>Account Number</th>
-                                    <th>Amount</th>
-                                    <th>Payment Date</th>
-                                    <th>Payment Mode</th>
-                                    <th>Status</th>
-                                    <th>Remarks</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach ($collections as $collection)
-                                    <tr>
-                                        <td><strong>{{ $collection->receipt_number }}</strong></td>
-                                        <td>{{ $collection->rdAccount->customer->name ?? 'N/A' }}</td>
-                                        <td>{{ $collection->rdAccount->account_number ?? 'N/A' }}</td>
-                                        <td>₹{{ number_format($collection->amount, 2) }}</td>
-                                        <td>{{ $collection->date ? \Carbon\Carbon::parse($collection->date)->format('d M Y') : 'N/A' }}</td>
-                                        <td>
-                                            <span class="badge bg-info">{{ ucfirst($collection->payment_method) }}</span>
-                                        </td>
-                                        <td>
-                                            @if ($collection->status == 'Not in Lot')
-                                                <span class="badge bg-warning">{{ $collection->status }}</span>
-                                            @elseif($collection->status == 'completed')
-                                                <span class="badge bg-success">{{ ucfirst($collection->status) }}</span>
-                                            @else
-                                                <span class="badge bg-secondary">{{ ucfirst($collection->status) }}</span>
-                                            @endif
-                                        </td>
-                                        <td>{{ $collection->remarks ?? '-' }}</td>
-                                        <td>
-                                            <div class="btn-group btn-group-sm">
-                                                <a href="{{ route('payments.show', $collection->id) }}"
-                                                    class="btn btn-outline-primary btn-sm">
-                                                    <i class="fas fa-eye"></i>
-                                                </a>
-                                                @if ($collection->status == 'Not in Lot')
-                                                    <button class="btn btn-outline-success btn-sm"
-                                                        onclick="markInLot({{ $collection->id }})">
-                                                        <i class="fas fa-check"></i>
-                                                    </button>
-                                                @endif
-                                            </div>
-                                        </td>
-                                    </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="card-title">Cash Collections</h6>
+                            <h4>{{ $collections->where('payment_type', 'cash')->count() }}</h4>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-money-bill fa-2x"></i>
+                        </div>
                     </div>
-
-                    <!-- Pagination -->
-                    <div class="d-flex justify-content-center mt-4">
-                        {{ $collections->appends(request()->query())->links() }}
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="card-title">UPI Collections</h6>
+                            <h4>{{ $collections->where('payment_type', 'upi')->count() }}</h4>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-mobile-alt fa-2x"></i>
+                        </div>
                     </div>
-                @else
-                    <div class="text-center py-4">
-                        <i class="fas fa-receipt fa-3x text-muted mb-3"></i>
-                        <h5>No Collections Found</h5>
-                        <p class="text-muted">No collection records found matching your criteria.</p>
-                        <a href="{{ route('collections.create') }}" class="btn btn-primary">
-                            <i class="fas fa-plus"></i> Add First Collection
-                        </a>
-                    </div>
-                @endif
+                </div>
             </div>
         </div>
     </div>
-@endsection
+    @endif
+</div>
 
 @push('scripts')
-    <script>
-        function markInLot(collectionId) {
-            if (confirm('Mark this collection as "In Lot"?')) {
-                // Add AJAX call to update collection status
-                fetch(`/collections/${collectionId}/mark-in-lot`, {
-                        method: 'POST',
-                        headers: {
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                            'Content-Type': 'application/json',
-                        },
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            location.reload();
-                        } else {
-                            alert('Error updating status');
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                        alert('Error updating status');
-                    });
-            }
-        }
-    </script>
+<script>
+$(document).ready(function() {
+    // Auto-submit form on status change
+    $('#status').change(function() {
+        $(this).closest('form').submit();
+    });
+
+    // Clear individual filters
+    $('.btn-clear-filter').click(function() {
+        const target = $(this).data('target');
+        $(target).val('');
+        $(this).closest('form').submit();
+    });
+
+    // Tooltip initialization
+    $('[title]').tooltip();
+});
+</script>
 @endpush
+@endsection

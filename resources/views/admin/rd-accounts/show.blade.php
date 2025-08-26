@@ -49,6 +49,14 @@
                             <th>Total Deposited</th>
                             <td>₹{{ number_format($rdAccount->total_deposited, 2) }}</td>
                         </tr>
+                        <tr>
+                            <th>Rebate Amount</th>
+                            <td>₹{{ number_format($rdAccount->calculateRebate(), 2) }}</td>
+                        </tr>
+                        <tr>
+                            <th>Total with Rebate</th>
+                            <td>₹{{ number_format($rdAccount->total_amount_with_rebate, 2) }}</td>
+                        </tr>
                     </table>
                 </div>
                 <div class="col-md-6">
@@ -79,6 +87,41 @@
                             <td>{{ $rdAccount->installments_paid }}</td>
                         </tr>
                     </table>
+                </div>
+            </div>
+
+            <!-- Rebate Information -->
+            <div class="row mt-4">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h6 class="mb-0"><i class="fas fa-gift"></i> Rebate Information</h6>
+                        </div>
+                        <div class="card-body">
+                            @php
+                                $rebateInfo = $rdAccount->rebate_info;
+                            @endphp
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <strong>Installments Paid:</strong> {{ $rebateInfo['installments_paid'] }}
+                                </div>
+                                <div class="col-md-3">
+                                    <strong>Rebate Threshold:</strong> {{ $rebateInfo['rebate_threshold'] }} months
+                                </div>
+                                <div class="col-md-3">
+                                    <strong>Rebate Amount:</strong> ₹{{ number_format($rebateInfo['rebate_amount'], 2) }}
+                                </div>
+                                <div class="col-md-3">
+                                    <strong>Status:</strong> 
+                                    @if($rebateInfo['rebate_applied'])
+                                        <span class="badge bg-success">Rebate Applied</span>
+                                    @else
+                                        <span class="badge bg-warning">{{ $rebateInfo['rebate_remaining'] }} months to rebate</span>
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 

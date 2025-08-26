@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Agent extends Authenticatable
 {
@@ -71,7 +72,7 @@ class Agent extends Authenticatable
     /**
      * Get the roles that belong to the agent.
      */
-    public function roles()
+    public function roles(): BelongsToMany
     {
         return $this->belongsToMany(Role::class, 'agent_role');
     }
@@ -237,5 +238,21 @@ class Agent extends Authenticatable
     public function payments()
     {
         return $this->hasMany(Payment::class);
+    }
+
+    /**
+     * Get the collections for the agent.
+     */
+    public function collections()
+    {
+        return $this->hasMany(Collection::class);
+    }
+
+    /**
+     * Get the lots for the agent.
+     */
+    public function lots()
+    {
+        return $this->hasMany(Lot::class);
     }
 }

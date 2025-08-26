@@ -91,27 +91,45 @@
                                     </div>
                                 </div>
 
-                                <div class="col-md-6">
-                                    <div class="form-group">
-                                        <label for="agent_id">Select Agent <span class="text-danger">*</span></label>
-                                        <select class="form-control select2 @error('agent_id') is-invalid @enderror"
-                                            id="agent_id" name="agent_id" autocomplete="off" required>
-                                            <option value="">Select Agent</option>
-                                            @foreach ($agents as $agent)
-                                                @if ($agent->id != auth()->id())
-                                                    <option value="{{ $agent->id }}"
-                                                        data-phone="{{ $agent->mobile_number }}"
-                                                        {{ old('agent_id') == $agent->id ? 'selected' : '' }}>
-                                                        {{ $agent->name }} - {{ $agent->mobile_number }}
-                                                    </option>
-                                                @endif
-                                            @endforeach
-                                        </select>
-                                        @error('agent_id')
-                                            <span class="invalid-feedback">{{ $message }}</span>
-                                        @enderror
+                                @php
+                                    $isAgent = auth()->user() instanceof \App\Models\Agent;
+                                @endphp
+                                
+                                @if(!$isAgent)
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="agent_id">Select Agent <span class="text-danger">*</span></label>
+                                            <select class="form-control select2 @error('agent_id') is-invalid @enderror"
+                                                id="agent_id" name="agent_id" autocomplete="off" required>
+                                                <option value="">Select Agent</option>
+                                                @foreach ($agents as $agent)
+                                                    @if ($agent->id != auth()->id())
+                                                        <option value="{{ $agent->id }}"
+                                                            data-phone="{{ $agent->mobile_number }}"
+                                                            {{ old('agent_id') == $agent->id ? 'selected' : '' }}>
+                                                            {{ $agent->name }} - {{ $agent->mobile_number }}
+                                                        </option>
+                                                    @endif
+                                                @endforeach
+                                            </select>
+                                            @error('agent_id')
+                                                <span class="invalid-feedback">{{ $message }}</span>
+                                            @enderror
+                                        </div>
                                     </div>
-                                </div>
+                                @else
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label>Assigned Agent</label>
+                                            <p class="form-control-static bg-light p-2 rounded">
+                                                <i class="fas fa-user text-primary"></i> 
+                                                {{ auth()->user()->name }} - {{ auth()->user()->mobile_number }}
+                                                <small class="text-muted d-block">This customer will be automatically assigned to you</small>
+                                            </p>
+                                            <input type="hidden" name="agent_id" value="{{ auth()->id() }}">
+                                        </div>
+                                    </div>
+                                @endif
 
                                 <div class="col-md-6">
                                     <div class="form-group">

@@ -91,6 +91,57 @@
         </div>
     </div>
 
+    <!-- Quick Actions Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-primary">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-cogs"></i> Quick Actions</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <a href="{{ route('admin.excel-import.index') }}" class="btn btn-success btn-lg w-100 d-flex align-items-center justify-content-center">
+                                <i class="fas fa-sync-alt me-2"></i>
+                                <div>
+                                    <div class="fw-bold">Sync Data</div>
+                                    <small>Import Excel Files</small>
+                                </div>
+                            </a>
+                        </div>
+                        <div class="col-md-3">
+                            <a href="{{ route('agents.create') }}" class="btn btn-primary btn-lg w-100 d-flex align-items-center justify-content-center">
+                                <i class="fas fa-user-plus me-2"></i>
+                                <div>
+                                    <div class="fw-bold">Add Agent</div>
+                                    <small>Create New Agent</small>
+                                </div>
+                            </a>
+                        </div>
+                        <div class="col-md-3">
+                            <a href="{{ route('admin.rd-accounts.create') }}" class="btn btn-info btn-lg w-100 d-flex align-items-center justify-content-center">
+                                <i class="fas fa-plus-circle me-2"></i>
+                                <div>
+                                    <div class="fw-bold">New RD Account</div>
+                                    <small>Manual Entry</small>
+                                </div>
+                            </a>
+                        </div>
+                        <div class="col-md-3">
+                            <a href="{{ route('admin.rd-accounts.export') }}" class="btn btn-warning btn-lg w-100 d-flex align-items-center justify-content-center">
+                                <i class="fas fa-download me-2"></i>
+                                <div>
+                                    <div class="fw-bold">Export Data</div>
+                                    <small>Download Reports</small>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="row">
         <div class="col-xl-6">
             <div class="card mb-4">
