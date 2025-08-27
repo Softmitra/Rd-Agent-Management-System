@@ -59,7 +59,7 @@
                                         <label for="account_number">Account Number *</label>
                                         <input type="text" class="form-control" id="account_number"
                                             placeholder="Enter Account number" name="account_number"
-                                            value="{{ old('account_number') }}" required>
+                                            value="{{ old('account_number') }}" required autocomplete="off">
                                         <small class="text-muted">Enter a unique account number</small>
                                     </div>
                                 </div>
@@ -69,7 +69,7 @@
                                         <label for="registered_phone">Registered Phone *</label>
                                         <input type="text" class="form-control" id="registered_phone"
                                             name="registered_phone" value="{{ old('registered_phone') }}" required
-                                            maxlength="10" pattern="[0-9]{10}">
+                                            maxlength="10" pattern="[0-9]{10}" autocomplete="off" placeholder="Enter 10 digit phone number">
                                         <small class="text-muted">Enter 10 digit phone number</small>
                                     </div>
                                 </div>
@@ -89,7 +89,7 @@
                                     <div class="form-group joint-holder-section">
                                         <label for="joint_holder_name">Joint Holder 1 Name *</label>
                                         <input type="text" class="form-control" id="joint_holder_name"
-                                            name="joint_holder_name" value="{{ old('joint_holder_name') }}">
+                                            name="joint_holder_name" value="{{ old('joint_holder_name') }}" autocomplete="off" placeholder="Enter joint holder name">
                                     </div>
                                 </div>
                                 <div class="col-md-6" style="display: none;">
@@ -97,7 +97,7 @@
                                     <div class="form-group joint-holder-section">
                                         <label for="joint_holder_2_name">Joint Holder 2 Name</label>
                                         <input type="text" class="form-control" id="joint_holder_2_name"
-                                            name="joint_holder_2_name" value="{{ old('joint_holder_2_name') }}">
+                                            name="joint_holder_2_name" value="{{ old('joint_holder_2_name') }}" autocomplete="off" placeholder="Enter second joint holder name">
                                     </div>
                                 </div>
                                 <div class="col-md-6" style="display: none;">
@@ -105,7 +105,7 @@
                                     <div class="form-group joint-holder-section">
                                         <label for="joint_holder_3_name">Joint Holder 3 Name</label>
                                         <input type="text" class="form-control" id="joint_holder_3_name"
-                                            name="joint_holder_3_name" value="{{ old('joint_holder_3_name') }}">
+                                            name="joint_holder_3_name" value="{{ old('joint_holder_3_name') }}" autocomplete="off" placeholder="Enter third joint holder name">
                                     </div>
                                 </div>
                                 <div class="col-md-6">
@@ -123,7 +123,7 @@
                                     <div class="form-group">
                                         <label for="monthly_amount">Monthly Amount *</label>
                                         <input type="number" class="form-control" id="monthly_amount" name="monthly_amount"
-                                            value="{{ old('monthly_amount') }}" required min="100" step="10">
+                                            value="{{ old('monthly_amount') }}" required min="100" step="10" autocomplete="off" placeholder="Enter monthly amount">
                                         <small class="text-muted">Minimum Rs. 100, multiples of Rs. 10</small>
                                     </div>
                                 </div>
@@ -142,7 +142,7 @@
                                     <div class="form-group">
                                         <label for="cheque_number">Cheque Number *</label>
                                         <input type="text" class="form-control" id="cheque_number" name="cheque_number"
-                                            value="{{ old('cheque_number') }}">
+                                            value="{{ old('cheque_number') }}" autocomplete="off" placeholder="Enter cheque number">
                                     </div>
                                 </div>
 
@@ -158,7 +158,7 @@
                                     <div class="form-group">
                                         <label for="cheque_bank">Cheque Bank *</label>
                                         <input type="text" class="form-control" id="cheque_bank" name="cheque_bank"
-                                            value="{{ old('cheque_bank') }}">
+                                            value="{{ old('cheque_bank') }}" autocomplete="off" placeholder="Enter bank name">
                                     </div>
                                 </div>
 
@@ -166,7 +166,7 @@
                                     <div class="form-group">
                                         <label for="nominee_name">Nominee Name</label>
                                         <input type="text" class="form-control" id="nominee_name" name="nominee_name"
-                                            value="{{ old('nominee_name') }}">
+                                            value="{{ old('nominee_name') }}" autocomplete="off" placeholder="Enter nominee name">
                                     </div>
                                 </div>
 
@@ -174,7 +174,7 @@
                                     <div class="form-group">
                                         <label for="nominee_relation">Nominee Relation</label>
                                         <input type="text" class="form-control" id="nominee_relation" name="nominee_relation"
-                                            value="{{ old('nominee_relation') }}">
+                                            value="{{ old('nominee_relation') }}" autocomplete="off" placeholder="Enter relation with nominee">
                                     </div>
                                 </div>
 
@@ -182,7 +182,7 @@
                                     <div class="form-group">
                                         <label for="nominee_phone">Nominee Phone</label>
                                         <input type="text" class="form-control" id="nominee_phone" name="nominee_phone"
-                                            value="{{ old('nominee_phone') }}" maxlength="10" pattern="[0-9]{10}">
+                                            value="{{ old('nominee_phone') }}" maxlength="10" pattern="[0-9]{10}" autocomplete="off" placeholder="Enter nominee phone number">
                                     </div>
                                 </div>
 
@@ -190,7 +190,7 @@
                                     <div class="form-group">
                                         <label for="previous_post_office">Previous Post Office (if transferred)</label>
                                         <input type="text" class="form-control" id="previous_post_office" name="previous_post_office"
-                                            value="{{ old('previous_post_office') }}">
+                                            value="{{ old('previous_post_office') }}" autocomplete="off" placeholder="Enter previous post office name">
                                     </div>
                                 </div>
 
@@ -207,7 +207,7 @@
                                         <label for="total_deposited">Total Deposited Amount *</label>
                                         <input type="number" class="form-control" id="total_deposited"
                                             name="total_deposited" value="{{ old('total_deposited', 0) }}" required
-                                            min="0" step="0.01">
+                                            min="0" step="0.01" autocomplete="off" placeholder="Enter total deposited amount">
                                     </div>
                                 </div>
                                 <div class="col-md-6">
@@ -221,7 +221,7 @@
 
                                     <div class="form-group">
                                         <label for="paid_months">Installments Paid(Monthly)</label>
-                                        <input type="number" class="form-control" id="paid_months">
+                                        <input type="number" class="form-control" id="paid_months" autocomplete="off" placeholder="Calculated installments paid">
                                     </div>
                                 </div>
 

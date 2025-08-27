@@ -14,7 +14,8 @@
         "laravel/tinker": "^2.8",
         "laravel/ui": "^4.6",
         "maatwebsite/excel": "^3.1",
-        "phpoffice/phpspreadsheet": "^1.29"
+        "phpoffice/phpspreadsheet": "^1.29",
+        "rap2hpoutre/laravel-log-viewer": "*"
     },
     "require-dev": {
         "fakerphp/faker": "^1.9.1",

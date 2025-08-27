@@ -111,6 +111,9 @@ Route::prefix('admin')->middleware(['auth', 'role:admin'])->group(function () {
     
     // API route to fetch customer's RD accounts for duplicate checking
     Route::get('customers/{customer}/rd-accounts', [CustomerController::class, 'getRdAccounts'])->name('admin.customers.rd-accounts');
+    
+    // Log Viewer Routes - Accessible only to admins
+    Route::get('logs', [\Rap2hpoutre\LaravelLogViewer\LogViewerController::class, 'index'])->name('admin.logs.index');
 });
 
 // Agent Routes

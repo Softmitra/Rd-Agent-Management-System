@@ -3,7 +3,7 @@
         'name' => 'laravel/laravel',
         'pretty_version' => 'dev-main',
         'version' => 'dev-main',
-        'reference' => 'fde123e5ec8aafea6d950a808933686753808d17',
+        'reference' => '0e89f828f716594fd08fe28221581eb8bb1b3e19',
         'type' => 'project',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
@@ -463,7 +463,7 @@
         'laravel/laravel' => array(
             'pretty_version' => 'dev-main',
             'version' => 'dev-main',
-            'reference' => 'fde123e5ec8aafea6d950a808933686753808d17',
+            'reference' => '0e89f828f716594fd08fe28221581eb8bb1b3e19',
             'type' => 'project',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),
@@ -1018,8 +1018,8 @@
         'psr/log-implementation' => array(
             'dev_requirement' => false,
             'provided' => array(
-                0 => '3.0.0',
-                1 => '1.0|2.0|3.0',
+                0 => '1.0|2.0|3.0',
+                1 => '3.0.0',
             ),
         ),
         'psr/simple-cache' => array(
@@ -1070,6 +1070,15 @@
             'reference' => '91039bc1faa45ba123c4328958e620d382ec7088',
             'type' => 'library',
             'install_path' => __DIR__ . '/../ramsey/uuid',
+            'aliases' => array(),
+            'dev_requirement' => false,
+        ),
+        'rap2hpoutre/laravel-log-viewer' => array(
+            'pretty_version' => 'v2.5.0',
+            'version' => '2.5.0.0',
+            'reference' => 'ab85d5d88de728b99a9391a0c70e9b2f5743a589',
+            'type' => 'laravel-package',
+            'install_path' => __DIR__ . '/../rap2hpoutre/laravel-log-viewer',
             'aliases' => array(),
             'dev_requirement' => false,
         ),

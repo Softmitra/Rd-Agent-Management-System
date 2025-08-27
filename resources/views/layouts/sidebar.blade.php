@@ -116,6 +116,13 @@
                         <p>Roles</p>
                     </a>
                 </li>
+                
+                <li class="nav-item">
+                        <a href="{{ route('admin.logs.index') }}" class="nav-link {{ request()->routeIs('admin.logs.*') ? 'active' : '' }}" target="_blank">
+                            <i class="nav-icon fas fa-history"></i>
+                            <p>Activity Logs</p>
+                        </a>
+                </li>
                 @endif
             </ul>
         </nav>
