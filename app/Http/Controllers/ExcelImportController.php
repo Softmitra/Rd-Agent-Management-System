@@ -307,7 +307,6 @@ class ExcelImportController extends Controller
             'user_name' => $currentUser ? $currentUser->name : null,
             'user_email' => $currentUser ? $currentUser->email : null,
             'is_agent_model' => $currentUser instanceof \App\Models\Agent,
-            'has_agent_role' => $currentUser && method_exists($currentUser, 'hasRole') ? $currentUser->Auth::user() instanceof \App\Models\Agent : false,
             'auth_guard' => Auth::getDefaultDriver()
         ]);
 

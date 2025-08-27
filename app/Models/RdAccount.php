@@ -30,9 +30,15 @@ class RDAccount extends Model
         'account_type',
         'is_joint_account',
         'joint_holder_name',
+        'joint_holder_2_name',
+        'joint_holder_3_name',
         'account_number',
         'aslaas_number',
         'monthly_amount',
+        'payment_method',
+        'cheque_number',
+        'cheque_date',
+        'cheque_bank',
         'total_deposited',
         'opening_date',
         'registered_phone',
@@ -48,10 +54,22 @@ class RDAccount extends Model
         'maturity_date',
         'maturity_amount',
         'interest_rate',
+        'interest_compounding',
         'is_complete',
         'completed_at',
         'completion_notes',
-        'data_source'
+        'data_source',
+        'nominee_name',
+        'nominee_relation',
+        'nominee_phone',
+        'previous_post_office',
+        'transfer_date',
+        'premature_closure_date',
+        'premature_closure_amount',
+        'loan_availed',
+        'loan_amount',
+        'loan_date',
+        'loan_repayment_date'
     ];
 
     /**
@@ -63,10 +81,18 @@ class RDAccount extends Model
         'start_date' => 'date',
         'maturity_date' => 'date',
         'last_paid_month' => 'date',
+        'cheque_date' => 'date',
+        'transfer_date' => 'date',
+        'premature_closure_date' => 'date',
+        'loan_date' => 'date',
+        'loan_repayment_date' => 'date',
         'monthly_deposit_amount' => 'decimal:2',
         'maturity_amount' => 'decimal:2',
         'interest_rate' => 'decimal:2',
+        'premature_closure_amount' => 'decimal:2',
+        'loan_amount' => 'decimal:2',
         'is_complete' => 'boolean',
+        'loan_availed' => 'boolean',
         'completed_at' => 'datetime',
     ];
 
@@ -148,11 +174,13 @@ class RDAccount extends Model
     }
 
     /**
-     * Calculate penalty per month (1% of monthly deposit)
+     * Calculate penalty per month (Re. 1 for Rs. 100 denomination, proportional for other amounts)
      */
     public function getPenaltyPerMonthAttribute(): float
     {
-        return ($this->monthly_amount ?? 0) / 100;
+        $monthlyAmount = $this->monthly_amount ?? 0;
+        // Re. 1 penalty for Rs. 100, proportional for other amounts
+        return ($monthlyAmount / 100) * 1.00;
     }
 
     /**
@@ -178,14 +206,20 @@ class RDAccount extends Model
 
     /**
      * Calculate rebate amount based on paid installments
+     * Rs. 10 for 6 months, Rs. 40 for 12 months
      */
     public function calculateRebate(): float
     {
         $installmentsPaid = $this->installments_paid ?? 0;
         
-        // Apply rebate of ₹50 for every 6 months of payments
-        $rebateMultiplier = floor($installmentsPaid / 6);
-        return $rebateMultiplier * 50.00;
+        // Apply rebate based on the new scheme
+        if ($installmentsPaid >= 12) {
+            return 40.00; // Rs. 40 for 12 months
+        } elseif ($installmentsPaid >= 6) {
+            return 10.00; // Rs. 10 for 6 months
+        }
+        
+        return 0.00;
     }
     
     /**
@@ -208,15 +242,15 @@ class RDAccount extends Model
         $rebateAmount = $this->calculateRebate();
         
         // Calculate next rebate milestone
-        $nextRebateMilestone = (floor($installmentsPaid / 6) + 1) * 6;
-        $nextRebateAmount = (floor($installmentsPaid / 6) + 1) * 50;
+        $nextRebateMilestone = $installmentsPaid < 6 ? 6 : 12;
+        $nextRebateAmount = $installmentsPaid < 6 ? 10.00 : 40.00;
         $rebateRemaining = max(0, $nextRebateMilestone - $installmentsPaid);
         
         return [
             'installments_paid' => $installmentsPaid,
             'rebate_amount' => $rebateAmount,
             'rebate_applied' => $rebateAmount > 0,
-            'rebate_threshold' => 6, // Fixed threshold of 6 months
+            'rebate_threshold' => 6, // Fixed threshold for display
             'next_rebate_milestone' => $nextRebateMilestone,
             'next_rebate_amount' => $nextRebateAmount,
             'rebate_remaining' => $rebateRemaining,
@@ -262,7 +296,7 @@ class RDAccount extends Model
     /**
      * Mark RD account as complete
      */
-    public function markAsComplete(string $notes = null): bool
+    public function markAsComplete(?string $notes = null): bool
     {
         return $this->update([
             'is_complete' => true,
@@ -274,7 +308,7 @@ class RDAccount extends Model
     /**
      * Mark RD account as incomplete
      */
-    public function markAsIncomplete(string $notes = null): bool
+    public function markAsIncomplete(?string $notes = null): bool
     {
         return $this->update([
             'is_complete' => false,
@@ -323,5 +357,101 @@ class RDAccount extends Model
     public function scopeFromExcel($query)
     {
         return $query->where('data_source', 'excel_import');
+    }
+
+    /**
+     * Validate monthly amount meets minimum requirement (Rs. 100 and multiples of Rs. 10)
+     */
+    public function validateMonthlyAmount(): bool
+    {
+        $monthlyAmount = $this->monthly_amount ?? 0;
+        return $monthlyAmount >= 100 && $monthlyAmount % 10 === 0;
+    }
+
+    /**
+     * Check if account is eligible for premature closure (after 3 years)
+     */
+    public function isEligibleForPrematureClosure(): bool
+    {
+        if (!$this->start_date) {
+            return false;
+        }
+
+        $startDate = Carbon::parse($this->start_date);
+        $threeYearsAgo = Carbon::now()->subYears(3);
+        
+        return $startDate <= $threeYearsAgo;
+    }
+
+    /**
+     * Check if account is eligible for loan (after 12 installments and 1 year)
+     */
+    public function isEligibleForLoan(): bool
+    {
+        if (!$this->start_date || $this->installments_paid < 12) {
+            return false;
+        }
+
+        $startDate = Carbon::parse($this->start_date);
+        $oneYearAgo = Carbon::now()->subYear();
+        
+        return $startDate <= $oneYearAgo;
+    }
+
+    /**
+     * Calculate maximum loan amount (50% of balance credit)
+     */
+    public function getMaxLoanAmountAttribute(): float
+    {
+        if (!$this->isEligibleForLoan()) {
+            return 0.00;
+        }
+
+        $balanceCredit = $this->total_deposited ?? 0;
+        return $balanceCredit * 0.5; // 50% of balance
+    }
+
+    /**
+     * Get all joint holders including primary account holder
+     */
+    public function getAllJointHoldersAttribute(): array
+    {
+        $holders = [$this->customer->name ?? 'Primary Holder'];
+        
+        if ($this->joint_holder_name) {
+            $holders[] = $this->joint_holder_name;
+        }
+        if ($this->joint_holder_2_name) {
+            $holders[] = $this->joint_holder_2_name;
+        }
+        if ($this->joint_holder_3_name) {
+            $holders[] = $this->joint_holder_3_name;
+        }
+
+        return $holders;
+    }
+
+    /**
+     * Check if account has nomination facility
+     */
+    public function hasNomination(): bool
+    {
+        return !empty($this->nominee_name);
+    }
+
+    /**
+     * Check if account was transferred from another post office
+     */
+    public function isTransferred(): bool
+    {
+        return !empty($this->previous_post_office);
+    }
+
+    /**
+     * Check if account has availed loan facility
+     */
+    public function hasLoan(): bool
+    {
+        return $this->loan_availed && !empty($this->loan_amount);
     }
 }

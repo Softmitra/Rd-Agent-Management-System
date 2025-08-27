@@ -87,9 +87,25 @@
                                 <div class="col-md-6" style="display: none;">
 
                                     <div class="form-group joint-holder-section">
-                                        <label for="joint_holder_name">Joint Holder Name *</label>
+                                        <label for="joint_holder_name">Joint Holder 1 Name *</label>
                                         <input type="text" class="form-control" id="joint_holder_name"
                                             name="joint_holder_name" value="{{ old('joint_holder_name') }}">
+                                    </div>
+                                </div>
+                                <div class="col-md-6" style="display: none;">
+
+                                    <div class="form-group joint-holder-section">
+                                        <label for="joint_holder_2_name">Joint Holder 2 Name</label>
+                                        <input type="text" class="form-control" id="joint_holder_2_name"
+                                            name="joint_holder_2_name" value="{{ old('joint_holder_2_name') }}">
+                                    </div>
+                                </div>
+                                <div class="col-md-6" style="display: none;">
+
+                                    <div class="form-group joint-holder-section">
+                                        <label for="joint_holder_3_name">Joint Holder 3 Name</label>
+                                        <input type="text" class="form-control" id="joint_holder_3_name"
+                                            name="joint_holder_3_name" value="{{ old('joint_holder_3_name') }}">
                                     </div>
                                 </div>
                                 <div class="col-md-6">
@@ -107,7 +123,82 @@
                                     <div class="form-group">
                                         <label for="monthly_amount">Monthly Amount *</label>
                                         <input type="number" class="form-control" id="monthly_amount" name="monthly_amount"
-                                            value="{{ old('monthly_amount') }}" required min="0" step="0.01">
+                                            value="{{ old('monthly_amount') }}" required min="100" step="10">
+                                        <small class="text-muted">Minimum Rs. 100, multiples of Rs. 10</small>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="payment_method">Payment Method *</label>
+                                        <select class="form-control" id="payment_method" name="payment_method" required>
+                                            <option value="cash" {{ old('payment_method') == 'cash' ? 'selected' : '' }}>Cash</option>
+                                            <option value="cheque" {{ old('payment_method') == 'cheque' ? 'selected' : '' }}>Cheque</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6 cheque-fields" style="display: none;">
+                                    <div class="form-group">
+                                        <label for="cheque_number">Cheque Number *</label>
+                                        <input type="text" class="form-control" id="cheque_number" name="cheque_number"
+                                            value="{{ old('cheque_number') }}">
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6 cheque-fields" style="display: none;">
+                                    <div class="form-group">
+                                        <label for="cheque_date">Cheque Date *</label>
+                                        <input type="date" class="form-control" id="cheque_date" name="cheque_date"
+                                            value="{{ old('cheque_date') }}">
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6 cheque-fields" style="display: none;">
+                                    <div class="form-group">
+                                        <label for="cheque_bank">Cheque Bank *</label>
+                                        <input type="text" class="form-control" id="cheque_bank" name="cheque_bank"
+                                            value="{{ old('cheque_bank') }}">
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="nominee_name">Nominee Name</label>
+                                        <input type="text" class="form-control" id="nominee_name" name="nominee_name"
+                                            value="{{ old('nominee_name') }}">
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="nominee_relation">Nominee Relation</label>
+                                        <input type="text" class="form-control" id="nominee_relation" name="nominee_relation"
+                                            value="{{ old('nominee_relation') }}">
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="nominee_phone">Nominee Phone</label>
+                                        <input type="text" class="form-control" id="nominee_phone" name="nominee_phone"
+                                            value="{{ old('nominee_phone') }}" maxlength="10" pattern="[0-9]{10}">
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="previous_post_office">Previous Post Office (if transferred)</label>
+                                        <input type="text" class="form-control" id="previous_post_office" name="previous_post_office"
+                                            value="{{ old('previous_post_office') }}">
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="transfer_date">Transfer Date</label>
+                                        <input type="date" class="form-control" id="transfer_date" name="transfer_date"
+                                            value="{{ old('transfer_date') }}">
                                     </div>
                                 </div>
                                 <div class="col-md-6">
@@ -130,7 +221,7 @@
 
                                     <div class="form-group">
                                         <label for="paid_months">Installments Paid(Monthly)</label>
-                                        <input type="number" class="form-control" id="paid_months" readonly>
+                                        <input type="number" class="form-control" id="paid_months">
                                     </div>
                                 </div>
 
@@ -165,6 +256,11 @@
                 calculatePaidMonths();
             });
 
+            // Calculate total deposited when monthly amount or installments paid changes
+            $('#monthly_amount, #paid_months').on('input', function() {
+                calculateTotalDeposited();
+            });
+
             function calculatePaidMonths() {
                 var totalDeposited = parseFloat($('#total_deposited').val()) || 0;
                 var monthlyAmount = parseFloat($('#monthly_amount').val()) || 1;
@@ -172,6 +268,16 @@
                 if (monthlyAmount > 0) {
                     var paidMonths = Math.floor(totalDeposited / monthlyAmount);
                     $('#paid_months').val(paidMonths);
+                }
+            }
+
+            function calculateTotalDeposited() {
+                var monthlyAmount = parseFloat($('#monthly_amount').val()) || 0;
+                var paidMonths = parseFloat($('#paid_months').val()) || 0;
+
+                if (monthlyAmount > 0 && paidMonths > 0) {
+                    var totalDeposited = monthlyAmount * paidMonths;
+                    $('#total_deposited').val(totalDeposited.toFixed(2));
                 }
             }
 
@@ -183,9 +289,26 @@
                 }
             });
 
+            // Handle payment method section visibility
+            $('#payment_method').change(function() {
+                if ($(this).val() === 'cheque') {
+                    $('.cheque-fields').show();
+                } else {
+                    $('.cheque-fields').hide();
+                    $('#cheque_number').val('');
+                    $('#cheque_date').val('');
+                    $('#cheque_bank').val('');
+                }
+            });
+
             // Set initial state of joint holder section
             if ($('#is_joint_account').is(':checked')) {
                 $('.joint-holder-section').show();
+            }
+
+            // Set initial state of payment method section
+            if ($('#payment_method').val() === 'cheque') {
+                $('.cheque-fields').show();
             }
 
             // Calculate initial value

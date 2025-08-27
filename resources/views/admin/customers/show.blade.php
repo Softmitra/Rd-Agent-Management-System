@@ -179,8 +179,8 @@
                                                         </span>
                                                     </td>
                                                     <td>
-                                                        <a href="{{ route('rd-accounts.show', $account) }}" 
-                                                           class="btn btn-sm btn-info" 
+                                                        <a href="{{ route('admin.rd-accounts.show', $account) }}"
+                                                           class="btn btn-sm btn-info"
                                                            title="View Details">
                                                             <i class="fas fa-eye"></i>
                                                         </a>
@@ -202,4 +202,4 @@
         </div>
     </div>
 </div>
-@endsection 
+@endsection

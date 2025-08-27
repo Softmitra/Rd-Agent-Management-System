@@ -84,13 +84,24 @@ class RDAccountController extends Controller
         try {
             $validated = $request->validate([
                 'customer_id' => 'required|exists:customers,id',
-                'monthly_amount' => 'required|numeric|min:0',
+                'monthly_amount' => 'required|numeric|min:100|multiple_of:10',
                 'opening_date' => 'required|date_format:d/m/Y',
                 'total_deposited' => 'required|numeric|min:0',
                 'account_number' => 'required|string|unique:rd_accounts,account_number',
                 'registered_phone' => 'required|string|size:10',
                 'is_joint_account' => 'boolean',
                 'joint_holder_name' => 'required_if:is_joint_account,1',
+                'joint_holder_2_name' => 'nullable|string|max:255',
+                'joint_holder_3_name' => 'nullable|string|max:255',
+                'payment_method' => 'required|in:cash,cheque',
+                'cheque_number' => 'required_if:payment_method,cheque|nullable|string|max:255',
+                'cheque_date' => 'required_if:payment_method,cheque|nullable|date',
+                'cheque_bank' => 'required_if:payment_method,cheque|nullable|string|max:255',
+                'nominee_name' => 'nullable|string|max:255',
+                'nominee_relation' => 'nullable|string|max:255',
+                'nominee_phone' => 'nullable|string|size:10',
+                'previous_post_office' => 'nullable|string|max:255',
+                'transfer_date' => 'nullable|date',
                 'note' => 'nullable|string|max:500'
             ]);
 
@@ -105,11 +116,13 @@ class RDAccountController extends Controller
 
             $validated['start_date'] = $openingDate->format('Y-m-d');
 
-            // Set installments_paid to 1 if account opened in current month
-            if ($openingDate->isCurrentMonth()) {
-                $validated['installments_paid'] = 1;
+            // Calculate installments_paid based on total deposited and monthly amount
+            // If installments_paid is provided via form, use that to calculate total_deposited
+            if ($request->filled('paid_months')) {
+                $validated['installments_paid'] = (int) $request->paid_months;
+                $validated['total_deposited'] = $validated['monthly_amount'] * $validated['installments_paid'];
             } else {
-                // Otherwise calculate based on total deposited amount
+                // Otherwise calculate installments_paid based on total deposited amount
                 $validated['installments_paid'] = (int) floor($validated['total_deposited'] / $validated['monthly_amount']);
             }
 

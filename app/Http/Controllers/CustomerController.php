@@ -87,16 +87,13 @@ class CustomerController extends Controller
         // Check if logged in user is an agent
         $isAgent = auth()->guard('web')->check() && auth()->user() instanceof \App\Models\Agent;
         
-        // Only fetch agents if admin is creating customer
-        $agents = collect();
-        if (!$isAgent) {
-            $agents = \App\Models\Agent::where('is_active', true)
-                ->where('is_verified', true)
-                ->get(['id', 'name', 'mobile_number', 'agent_id']);
+        // Always fetch all agents regardless of admin/agent status
+        $agents = \App\Models\Agent::where('is_active', true)
+            ->where('is_verified', true)
+            ->get(['id', 'name', 'mobile_number', 'agent_id']);
 
-            // Log the result
-            Log::info('Fetched agents for customer creation', ['agents' => $agents]);
-        }
+        // Log the result
+        Log::info('Fetched agents for customer creation', ['agents' => $agents]);
 
         return view('admin.customers.create', compact('agents'));
     }
@@ -109,7 +106,7 @@ class CustomerController extends Controller
         // Check if logged in user is an agent
         $isAgent = auth()->guard('web')->check() && auth()->user() instanceof \App\Models\Agent;
         
-        // Validation rules - agent_id is optional if agent is logged in
+        // Validation rules - agent_id is always required
         $validationRules = [
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:customers'],
@@ -119,21 +116,10 @@ class CustomerController extends Controller
             'date_of_birth' => ['required', 'date', 'before:today'],
             'cif_id' => ['nullable', 'string', 'max:50', 'unique:customers'],
             'address' => ['required', 'string', 'max:1000'],
+            'agent_id' => ['required', 'exists:agents,id'], // Always require agent_id
         ];
 
-        // Add agent_id validation only if admin is creating customer
-        if (!$isAgent) {
-            $validationRules['agent_id'] = ['required', 'exists:agents,id'];
-        } else {
-            $validationRules['agent_id'] = ['nullable', 'exists:agents,id'];
-        }
-
         $validated = $request->validate($validationRules);
-
-        // Auto-assign agent_id if agent is logged in
-        if ($isAgent) {
-            $validated['agent_id'] = auth()->id();
-        }
 
         if ($request->hasFile('photo')) {
             $validated['photo'] = $request->file('photo')->store('customer-photos', 'public');
@@ -143,7 +129,6 @@ class CustomerController extends Controller
 
         Log::info('New customer created', [
             'customer_id' => $customer->id,
-            'created_by_agent' => $isAgent,
             'agent_id' => $validated['agent_id']
         ]);
 
