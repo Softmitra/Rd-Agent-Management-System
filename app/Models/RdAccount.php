@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class RDAccount extends Model
 {
@@ -99,7 +101,7 @@ class RDAccount extends Model
     /**
      * Get the customer that owns the RD account.
      */
-    public function customer()
+    public function customer(): BelongsTo
     {
         return $this->belongsTo(Customer::class);
     }
@@ -107,7 +109,7 @@ class RDAccount extends Model
     /**
      * Get the agent managing this RD account.
      */
-    public function agent()
+    public function agent(): BelongsTo
     {
         return $this->belongsTo(Agent::class);
     }
@@ -115,7 +117,7 @@ class RDAccount extends Model
     /**
      * Get the payments for this RD account.
      */
-    public function payments()
+    public function payments(): HasMany
     {
         return $this->hasMany(Payment::class);
     }
@@ -123,7 +125,7 @@ class RDAccount extends Model
     /**
      * Get the collections for this RD account.
      */
-    public function collections()
+    public function collections(): HasMany
     {
         return $this->hasMany(Collection::class, 'rd_account_id');
     }
@@ -136,12 +138,12 @@ class RDAccount extends Model
         return $query->where('status', 'active');
     }
 
-    public function creator()
+    public function creator(): BelongsTo
     {
         return $this->belongsTo(Agent::class, 'created_by');
     }
 
-    public function updater()
+    public function updater(): BelongsTo
     {
         return $this->belongsTo(Agent::class, 'updated_by');
     }
