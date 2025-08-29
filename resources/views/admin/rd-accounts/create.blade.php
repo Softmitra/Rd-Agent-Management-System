@@ -57,7 +57,7 @@
 
                                     <div class="form-group">
                                         <label for="account_number">Account Number *</label>
-                                        <input type="text" class="form-control" id="account_number"
+                                        <input type="text" class="form-control" id="account_number" maxlength="12"
                                             placeholder="Enter Account number" name="account_number"
                                             value="{{ old('account_number') }}" required autocomplete="off">
                                         <small class="text-muted">Enter a unique account number</small>

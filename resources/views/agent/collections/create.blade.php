@@ -218,7 +218,7 @@
                             </div>
                             <div class="col-md-4">
                                 <div class="form-floating">
-                                    <input type="text" 
+                                    <input type="text" maxlength="10"
                                            class="form-control" 
                                            id="search-cif" 
                                            name="search_cif" 

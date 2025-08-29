@@ -42,7 +42,8 @@
                 <div class="row g-3 mb-4">
                     <div class="col-md-3">
                         <label class="form-label">Account Number</label>
-                        <input type="text" name="search" class="form-control" value="{{ request('search') }}" placeholder="Search account number...">
+                        <input type="text" name="search" class="form-control" maxlength="12"
+                        value="{{ request('search') }}" placeholder="Search account number...">
                     </div>
                     <div class="col-md-3">
                         <label class="form-label">Status</label>

@@ -55,7 +55,7 @@
                                 <div class="mb-3">
                                     <label for="account_number" class="form-label">Account Number *</label>
                                     <input type="text" class="form-control @error('account_number') is-invalid @enderror" 
-                                           id="account_number" name="account_number" 
+                                           id="account_number" name="account_number" maxlength="12"
                                            value="{{ old('account_number', $rdAccount->account_number) }}" 
                                            {{ $rdAccount->status != 'active' ? 'readonly' : '' }} required>
                                     @error('account_number')

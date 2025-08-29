@@ -227,7 +227,7 @@ async function showIncompleteCustomers() {
                                     </div>
                                     <div class="mb-2">
                                         <input type="text" class="form-control form-control-sm" 
-                                               name="cif_id" placeholder="CIF ID *"
+                                               name="cif_id" placeholder="CIF ID *" maxlength="10"
                                                value="${customer.cif_id || ''}" required>
                                     </div>
                                     <div class="row">

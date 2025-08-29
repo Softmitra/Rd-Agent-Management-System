@@ -22,7 +22,7 @@
         <div class="card-header py-3">
             <form action="{{ route('payments.index') }}" method="GET" class="row g-3 align-items-center">
                 <div class="col-auto">
-                    <input type="text" 
+                    <input type="text" maxlength="12"
                            class="form-control" 
                            name="account_number" 
                            placeholder="Account Number"

@@ -135,7 +135,7 @@
                                 <div class="form-group" id="savings_account_section">
                                     <label for="savings_account_no">Savings Account Number</label>
                                     <input type="text" class="form-control @error('savings_account_no') is-invalid @enderror" 
-                                           id="savings_account_no" name="savings_account_no" 
+                                           id="savings_account_no" name="savings_account_no" maxlength="12"
                                            value="{{ old('savings_account_no', $customer->savings_account_no) }}">
                                     @error('savings_account_no')
                                         <div class="invalid-feedback">{{ $message }}</div>

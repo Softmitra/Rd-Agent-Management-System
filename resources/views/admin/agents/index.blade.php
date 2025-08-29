@@ -84,12 +84,12 @@
                                 </td>
                                 <td>
                                     @if($agent->aadhar_file)
-                                        <a href="{{ Storage::url($agent->aadhar_file) }}" target="_blank" class="btn btn-sm btn-info mb-1">
+                                        <a href="{{ route('agents.document', ['agent' => $agent, 'type' => 'aadhar']) }}" target="_blank" class="btn btn-sm btn-info mb-1">
                                             <i class="fas fa-id-card"></i> Aadhar
                                         </a>
                                     @endif
                                     @if($agent->pan_file)
-                                        <a href="{{ Storage::url($agent->pan_file) }}" target="_blank" class="btn btn-sm btn-info">
+                                        <a href="{{ route('agents.document', ['agent' => $agent, 'type' => 'pan']) }}" target="_blank" class="btn btn-sm btn-info">
                                             <i class="fas fa-id-card"></i> PAN
                                         </a>
                                     @endif
@@ -275,4 +275,4 @@ $(function() {
 });
 </script>
 @endpush
-@endsection 
+@endsection

@@ -120,7 +120,7 @@
                                                             <i class="fas fa-file-pdf fa-4x text-danger"></i>
                                                             <p class="mt-2 text-muted">PDF Document</p>
                                                         @else
-                                                            <img src="{{ Storage::url($agent->aadhar_file) }}" alt="Aadhar Card" class="img-thumbnail" style="max-height: 120px; cursor: pointer;" onclick="viewDocument('{{ route('agents.document', [$agent, 'aadhar']) }}', 'Aadhar Card', '{{ $isPdf ? 'pdf' : 'image' }}')">
+                                                            <img src="{{ route('agents.document', [$agent, 'aadhar']) }}" alt="Aadhar Card" class="img-thumbnail" style="max-height: 120px; cursor: pointer;" onclick="viewDocument('{{ route('agents.document', [$agent, 'aadhar']) }}', 'Aadhar Card', 'image')">
                                                         @endif
                                                     </div>
                                                     <button type="button" class="btn btn-primary btn-sm" onclick="viewDocument('{{ route('agents.document', [$agent, 'aadhar']) }}', 'Aadhar Card', '{{ $isPdf ? 'pdf' : 'image' }}')">
@@ -148,7 +148,7 @@
                                                             <i class="fas fa-file-pdf fa-4x text-danger"></i>
                                                             <p class="mt-2 text-muted">PDF Document</p>
                                                         @else
-                                                            <img src="{{ Storage::url($agent->pan_file) }}" alt="PAN Card" class="img-thumbnail" style="max-height: 120px; cursor: pointer;" onclick="viewDocument('{{ route('agents.document', [$agent, 'pan']) }}', 'PAN Card', '{{ $isPdf ? 'pdf' : 'image' }}')">
+                                                            <img src="{{ route('agents.document', [$agent, 'pan']) }}" alt="PAN Card" class="img-thumbnail" style="max-height: 120px; cursor: pointer;" onclick="viewDocument('{{ route('agents.document', [$agent, 'pan']) }}', 'PAN Card', 'image')">
                                                         @endif
                                                     </div>
                                                     <button type="button" class="btn btn-success btn-sm" onclick="viewDocument('{{ route('agents.document', [$agent, 'pan']) }}', 'PAN Card', '{{ $isPdf ? 'pdf' : 'image' }}')">
@@ -474,4 +474,4 @@ function viewDocument(url, title, type) {
 }
 </style>
 @endpush
-@endsection 
+@endsection

@@ -101,7 +101,7 @@
                                 <div class="col-md-6">
                                     <div class="form-group">
                                         <label for="aadhar_number">Aadhar Number</label>
-                                        <input type="text"
+                                        <input type="text" maxlength="12"
                                             class="form-control @error('aadhar_number') is-invalid @enderror"
                                             id="aadhar_number" name="aadhar_number" autocomplete="off"
                                             value="{{ old('aadhar_number') }}" placeholder="Enter Aadhar number" required>
@@ -118,16 +118,19 @@
                                         <label for="pan_number">PAN Number</label>
                                         <input type="text" class="form-control @error('pan_number') is-invalid @enderror"
                                             id="pan_number" name="pan_number" autocomplete="off"
-                                            value="{{ old('pan_number') }}" placeholder="Enter PAN number" required>
+                                            value="{{ old('pan_number') }}" placeholder="Enter PAN number" 
+                                            pattern="[A-Z]{5}[0-9]{4}[A-Z]{1}" maxlength="10"
+                                            oninput="this.value = this.value.toUpperCase()" required>
                                         @error('pan_number')
                                             <span class="invalid-feedback">{{ $message }}</span>
                                         @enderror
+                                        <small class="form-text text-muted">Format: 5 letters, 4 digits, 1 letter (e.g., ABCDE1234F)</small>
                                     </div>
                                 </div>
                                 <div class="col-md-6">
                                     <div class="form-group">
                                         <label for="contact_info[phone]">Contact Phone</label>
-                                        <input type="text"
+                                        <input type="text" maxlength="10"
                                             class="form-control @error('contact_info.phone') is-invalid @enderror"
                                             id="contact_info[phone]" name="contact_info[phone]" autocomplete="off"
                                             value="{{ old('contact_info.phone') }}"

@@ -74,10 +74,13 @@
                                 <div class="form-group">
                                     <label for="date_of_birth">Date of Birth</label>
                                     <input type="date" class="form-control @error('date_of_birth') is-invalid @enderror" 
-                                           id="date_of_birth" name="date_of_birth" value="{{ old('date_of_birth') }}">
+                                           id="date_of_birth" name="date_of_birth" value="{{ old('date_of_birth') }}"
+                                           max="{{ date('Y-m-d', strtotime('-18 years')) }}"
+                                           onchange="validateAge(this)">
                                     @error('date_of_birth')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
+                                    <small class="form-text text-muted">Customer must be at least 18 years old</small>
                                 </div>
                             </div>
 
@@ -128,7 +131,7 @@
 
                                 <div class="form-group" id="savings_account_section" style="display: none;">
                                     <label for="savings_account_no">Savings Account Number</label>
-                                    <input type="text" class="form-control @error('savings_account_no') is-invalid @enderror" 
+                                    <input type="text" class="form-control @error('savings_account_no') is-invalid @enderror" maxlength="12"
                                            id="savings_account_no" name="savings_account_no" value="{{ old('savings_account_no') }}">
                                     @error('savings_account_no')
                                         <div class="invalid-feedback">{{ $message }}</div>
@@ -194,6 +197,19 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('pan_number').addEventListener('input', function(e) {
         e.target.value = e.target.value.toUpperCase();
     });
+
+    // Function to validate age (must be at least 18 years old)
+    function validateAge(input) {
+        const selectedDate = new Date(input.value);
+        const today = new Date();
+        const minDate = new Date(today.getFullYear() - 18, today.getMonth(), today.getDate());
+        
+        if (selectedDate > minDate) {
+            alert('Customer must be at least 18 years old. Please select a valid date of birth.');
+            input.value = '';
+            input.focus();
+        }
+    }
 });
 </script>
 @endsection

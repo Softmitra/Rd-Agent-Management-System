@@ -133,7 +133,7 @@
                                     <div class="form-group">
                                         <label for="cif_id">CIF ID</label>
                                         <input type="text" class="form-control @error('cif_id') is-invalid @enderror"
-                                            id="cif_id" name="cif_id" value="{{ old('cif_id') }}"
+                                            id="cif_id" name="cif_id" value="{{ old('cif_id') }}" maxlength="10"
                                             placeholder="Enter CIF ID" autocomplete="off">
                                         @error('cif_id')
                                             <span class="invalid-feedback">{{ $message }}</span>
@@ -147,10 +147,12 @@
                                         <input type="date"
                                             class="form-control @error('date_of_birth') is-invalid @enderror"
                                             id="date_of_birth" name="date_of_birth" value="{{ old('date_of_birth') }}"
-                                            autocomplete="off" required>
+                                            autocomplete="off" required max="{{ date('Y-m-d', strtotime('-18 years')) }}"
+                                            onchange="validateAge(this)">
                                         @error('date_of_birth')
                                             <span class="invalid-feedback">{{ $message }}</span>
                                         @enderror
+                                        <small class="form-text text-muted">Customer must be at least 18 years old</small>
                                     </div>
                                 </div>
 
@@ -255,6 +257,19 @@
                     $(this).val(value);
                 });
             });
+
+            // Function to validate age (must be at least 18 years old)
+            function validateAge(input) {
+                const selectedDate = new Date(input.value);
+                const today = new Date();
+                const minDate = new Date(today.getFullYear() - 18, today.getMonth(), today.getDate());
+                
+                if (selectedDate > minDate) {
+                    alert('Customer must be at least 18 years old. Please select a valid date of birth.');
+                    input.value = '';
+                    input.focus();
+                }
+            }
         </script>
     @endpush
 @endsection
